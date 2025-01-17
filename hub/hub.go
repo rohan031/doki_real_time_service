@@ -90,7 +90,15 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 	user := helper.CreateUserFromUsernameAndResource(username, resource)
 	newClient := CreateClient(conn, h, user)
 
+	if h.clients[username] == nil {
+		h.clients[username] = make(map[string]*Client)
+
+	}
 	h.clients[username][resource] = newClient
+
+	go newClient.ReadMessage()
+	go newClient.WriteMessage()
+
 }
 
 // CreateHub creates a new hub
