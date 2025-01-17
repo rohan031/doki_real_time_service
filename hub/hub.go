@@ -1,7 +1,6 @@
 package hub
 
 import (
-	"doki.co.in/doki_real_time_service/client"
 	"doki.co.in/doki_real_time_service/helper"
 	"github.com/gorilla/websocket"
 	"log"
@@ -9,20 +8,19 @@ import (
 	"sync"
 )
 
-// Hub handles all the client connection and related methods
-
 var websocketUpgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
 
+// Hub handles all the client connection and related methods
 type Hub struct {
 	sync.RWMutex
-	clients client.ClientList
+	clients ClientList
 }
 
 // AddClient adds newly connected client to Hub
-func (h *Hub) AddClient(user string, client *client.Client) {
+func (h *Hub) AddClient(user string, client *Client) {
 	h.Lock()
 	defer h.Unlock()
 
@@ -60,7 +58,7 @@ func (h *Hub) RemoveClient(user string) {
 
 // GetIndividualClient is used to get user connected client in particular resource
 // this will be used when server needs to send updates for the post and other user subscriptions
-func (h *Hub) GetIndividualClient(user string) *client.Client {
+func (h *Hub) GetIndividualClient(user string) *Client {
 	username, resource := helper.GetUsernameAndResourceFromUser(user)
 	if username == "" || resource == "" {
 		return nil
@@ -71,7 +69,7 @@ func (h *Hub) GetIndividualClient(user string) *client.Client {
 
 // GetAllConnectedClients will return all the connected clients for a particular user
 // this will be used when forwarding user messages
-func (h *Hub) GetAllConnectedClients(username string) map[string]*client.Client {
+func (h *Hub) GetAllConnectedClients(username string) map[string]*Client {
 	return h.clients[username]
 }
 
@@ -80,14 +78,24 @@ func (h *Hub) GetAllConnectedClients(username string) map[string]*client.Client 
 func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 	log.Println("new connection for websocket")
 
-	_, err := websocketUpgrader.Upgrade(w, r, nil)
+	conn, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("error upgrading incoming http connection to websocket: %v\n", err)
 		return
 	}
+
+	resource := helper.RandomString()
+	username := "rohan_verma__"
+
+	user := helper.CreateUserFromUsernameAndResource(username, resource)
+	newClient := CreateClient(conn, h, user)
+
+	h.clients[username][resource] = newClient
 }
 
 // CreateHub creates a new hub
 func CreateHub() *Hub {
-	return &Hub{}
+	return &Hub{
+		clients: make(ClientList),
+	}
 }

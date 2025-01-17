@@ -1,7 +1,6 @@
-package client
+package hub
 
 import (
-	"doki.co.in/doki_real_time_service/hub"
 	"github.com/gorilla/websocket"
 	"log"
 	"time"
@@ -22,7 +21,7 @@ type ClientList map[string]map[string]*Client
 
 type Client struct {
 	Connection *websocket.Conn
-	hub        *hub.Hub
+	hub        *Hub
 
 	// user is complete user with resource part
 	// e.g. username: rohan_verma__, is connected through [doki] native client
@@ -101,10 +100,11 @@ func (c *Client) WriteMessage() {
 	}
 }
 
-func CreateClient(conn *websocket.Conn, hub *hub.Hub) *Client {
+func CreateClient(conn *websocket.Conn, hub *Hub, user string) *Client {
 	return &Client{
 		Connection: conn,
 		hub:        hub,
 		write:      make(chan []byte),
+		user:       user,
 	}
 }
