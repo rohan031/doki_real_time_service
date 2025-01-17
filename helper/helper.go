@@ -1,6 +1,9 @@
 package helper
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // GetUsernameAndResourceFromUser returns given user, username and resource
 func GetUsernameAndResourceFromUser(user string) (string, string) {
@@ -16,4 +19,16 @@ func GetUsernameAndResourceFromUser(user string) (string, string) {
 	}
 
 	return userSlice[0], userSlice[1]
+}
+
+// CreateUserFromUsernameAndResource returns the complete user with username@resource
+func CreateUserFromUsernameAndResource(username, resource string) string {
+	return fmt.Sprintf("%v@%v", username, resource)
+}
+
+// RandomString is used for testing purposes
+func RandomString() string {
+	length := 8
+	b := make([]byte, length+2)
+	return fmt.Sprintf("%x", b)[2 : length+2]
 }
