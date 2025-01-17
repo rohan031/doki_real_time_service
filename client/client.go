@@ -21,7 +21,7 @@ var (
 type ClientList map[string]map[string]*Client
 
 type Client struct {
-	connection *websocket.Conn
+	Connection *websocket.Conn
 	hub        *hub.Hub
 
 	// user is complete user with resource part
@@ -41,19 +41,19 @@ func (c *Client) ReadMessage() {
 	}()
 
 	// adding max payload any client can send through [connection]
-	c.connection.SetReadLimit(incomingPayloadLimit)
+	c.Connection.SetReadLimit(incomingPayloadLimit)
 
 	// set pong wait
-	if err := c.connection.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+	if err := c.Connection.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
 		log.Printf("error setting pongwait: %v\n", err)
 		return
 	}
-	c.connection.SetPongHandler(func(string) error {
-		return c.connection.SetReadDeadline(time.Now().Add(pongWait))
+	c.Connection.SetPongHandler(func(string) error {
+		return c.Connection.SetReadDeadline(time.Now().Add(pongWait))
 	})
 
 	for {
-		messageType, payload, err := c.connection.ReadMessage()
+		messageType, payload, err := c.Connection.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error reading message: %v\n", err)
@@ -79,13 +79,13 @@ func (c *Client) WriteMessage() {
 		select {
 		case message, ok := <-c.write:
 			if !ok {
-				if err := c.connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
-					log.Printf("error closing connection: %v\n", err)
+				if err := c.Connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
+					log.Printf("error closing Connection: %v\n", err)
 				}
 				return
 			}
 
-			if err := c.connection.WriteMessage(websocket.TextMessage, message); err != nil {
+			if err := c.Connection.WriteMessage(websocket.TextMessage, message); err != nil {
 				log.Printf("error sending message: %v\n", err)
 			} else {
 				log.Printf("message send to client: %v\n\n", c.user)
@@ -93,7 +93,7 @@ func (c *Client) WriteMessage() {
 
 		case <-ticker.C:
 			log.Printf("sending ping to client: %v\n", c.user)
-			if err := c.connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+			if err := c.Connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				log.Printf("error sending ping to client: %v\n", err)
 				return
 			}
@@ -103,7 +103,7 @@ func (c *Client) WriteMessage() {
 
 func CreateClient(conn *websocket.Conn, hub *hub.Hub) *Client {
 	return &Client{
-		connection: conn,
+		Connection: conn,
 		hub:        hub,
 		write:      make(chan []byte),
 	}
