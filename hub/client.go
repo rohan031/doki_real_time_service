@@ -1,7 +1,6 @@
 package hub
 
 import (
-	"encoding/json"
 	"github.com/gorilla/websocket"
 	"log"
 	"time"
@@ -66,47 +65,38 @@ func (c *client) readMessage(resource string) {
 
 		// parse incoming payload
 		var payloadType basePayload
-		if err := json.Unmarshal(payload, &payloadType); err != nil {
-			log.Printf("error unmarshalling payload type: %v\n", err)
+		if !unmarshalAndValidate(&payload, &payloadType) {
+			// send error to user
 			continue
 		}
 
 		switch payloadType.Type {
 		case chatMessageType:
 			var message chatMessage
-			if err := json.Unmarshal(payload, &message); err != nil {
-				log.Printf("error unmarshalling chat message: %v\n", err)
-				continue
+			if unmarshalAndValidate(&payload, &message) {
+				handleChatMessagePayload(c.hub, &message, &payload, resource)
 			}
-			handleChatMessagePayload(c.hub, &message, &payload, resource)
-
 		case groupChatMessageType:
 			var message groupChatMessage
-			if err := json.Unmarshal(payload, &message); err != nil {
-				log.Printf("error unmarshalling group chat message: %v\n", err)
-				continue
+			if unmarshalAndValidate(&payload, &message) {
 			}
 		case typingStatusType:
 			var status typingStatus
-			if err := json.Unmarshal(payload, &status); err != nil {
-				log.Printf("error unmarshalling typing status: %v\n", err)
-				continue
+			if unmarshalAndValidate(&payload, &status) {
+				handleTypingStatusPayload(c.hub, &status, &payload)
 			}
 		case editMessageType:
 			var message editMessage
-			if err := json.Unmarshal(payload, &message); err != nil {
-				log.Printf("error unmarshalling edit message: %v\n", err)
-				continue
+			if unmarshalAndValidate(&payload, &message) {
 			}
 		case deleteMessageType:
 			var message deleteMessage
-			if err := json.Unmarshal(payload, &message); err != nil {
-				log.Printf("error unmarshalling delete message: %v\n", err)
-				continue
+			if unmarshalAndValidate(&payload, &message) {
 			}
 		default:
 			// unknown payload type
 			// send it to user to tell its unknown or something
+			log.Println("unknown payload type")
 		}
 
 	}

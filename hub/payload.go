@@ -1,6 +1,13 @@
 package hub
 
-import "time"
+import (
+	"encoding/json"
+	"github.com/go-playground/validator/v10"
+	"log"
+	"time"
+)
+
+var validate = validator.New()
 
 // payloadType contains all the possible payload that a client can send
 type payloadType string
@@ -22,53 +29,68 @@ const (
 // "edit_message"
 // "delete_message"
 type basePayload struct {
-	Type payloadType `json:"type"`
+	Type payloadType `json:"type" validate:"required"`
 }
 
 // chatMessage is payload for "chat_message"
 type chatMessage struct {
-	Type    payloadType `json:"type"`
-	From    string      `json:"from"`
-	To      string      `json:"to"`
-	Id      string      `json:"id"`
-	Subject string      `json:"subject"`
-	Body    string      `json:"body"`
-	SendAt  time.Time   `json:"sendAt"`
+	Type    payloadType `json:"type" validate:"required"`
+	From    string      `json:"from" validate:"required"`
+	To      string      `json:"to" validate:"required"`
+	Id      string      `json:"id" validate:"required"`
+	Subject string      `json:"subject" validate:"required"`
+	Body    string      `json:"body" validate:"required"`
+	SendAt  time.Time   `json:"sendAt" validate:"required"`
 }
 
 // typingStatus is payload for "typing_status"
 type typingStatus struct {
-	Type payloadType `json:"type"`
-	From string      `json:"from"`
-	To   string      `json:"to"`
+	Type payloadType `json:"type" validate:"required"`
+	From string      `json:"from" validate:"required"`
+	To   string      `json:"to" validate:"required"`
 }
 
 // editMessage is payload for "edit_message"
 type editMessage struct {
-	Type     payloadType `json:"type"`
-	From     string      `json:"from"`
-	To       string      `json:"to"`
-	Id       string      `json:"id"`
-	Body     string      `json:"body"`
-	EditedOn time.Time   `json:"editedOn"`
+	Type     payloadType `json:"type" validate:"required"`
+	From     string      `json:"from" validate:"required"`
+	To       string      `json:"to" validate:"required"`
+	Id       string      `json:"id" validate:"required"`
+	Body     string      `json:"body" validate:"required"`
+	EditedOn time.Time   `json:"editedOn" validate:"required"`
 }
 
 // deleteMessage is payload for "delete_message"
 type deleteMessage struct {
-	Type     payloadType `json:"type"`
-	From     string      `json:"from"`
-	To       string      `json:"to"`
-	Id       string      `json:"id"`
-	Everyone bool        `json:"everyone"`
+	Type     payloadType `json:"type" validate:"required"`
+	From     string      `json:"from" validate:"required"`
+	To       string      `json:"to" validate:"required"`
+	Id       string      `json:"id" validate:"required"`
+	Everyone bool        `json:"everyone" validate:"required"`
 }
 
 // groupChatMessage is payload for "group_chat_message"
 type groupChatMessage struct {
-	Type    payloadType `json:"type"`
-	From    string      `json:"from"`
-	To      string      `json:"to"`
-	Id      string      `json:"id"`
-	Subject string      `json:"subject"`
-	Body    string      `json:"body"`
-	SendAt  time.Time   `json:"sendAt"`
+	Type    payloadType `json:"type" validate:"required"`
+	From    string      `json:"from" validate:"required"`
+	To      string      `json:"to" validate:"required"`
+	Id      string      `json:"id" validate:"required"`
+	Subject string      `json:"subject" validate:"required"`
+	Body    string      `json:"body" validate:"required"`
+	SendAt  time.Time   `json:"sendAt" validate:"required"`
+}
+
+// unmarshalAndValidate first unmarshal payload json and validates it
+func unmarshalAndValidate[T any](payload *[]byte, target *T) bool {
+	if err := json.Unmarshal(*payload, target); err != nil {
+		log.Printf("error unmarshalling payload: %v\n", err)
+		return false
+	}
+
+	if err := validate.Struct(target); err != nil {
+		log.Println("missing required field in payload.")
+		return false
+	}
+
+	return true
 }
