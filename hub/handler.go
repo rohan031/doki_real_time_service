@@ -19,3 +19,13 @@ func handleChatMessagePayload(h *Hub, message *chatMessage, payload *[]byte, res
 		}
 	}
 }
+
+// handleTypingStatusPayload sends typing status to all the connected recipient
+func handleTypingStatusPayload(h *Hub, status *typingStatus, payload *[]byte) {
+	recipient := status.To
+	recipientConnectedClients := h.getAllConnectedClients(recipient)
+
+	for _, conn := range recipientConnectedClients {
+		conn.write <- *payload
+	}
+}
