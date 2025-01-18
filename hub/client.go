@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var (
+const (
 	pongWait             = 60 * time.Second
 	pingInterval         = (pongWait * 9) / 10
 	incomingPayloadLimit = int64(512)

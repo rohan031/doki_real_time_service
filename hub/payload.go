@@ -5,7 +5,7 @@ import "time"
 // PayloadType contains all the possible payload that a client can send
 type PayloadType string
 
-var (
+const (
 	ChatMessageType      = PayloadType("chat_message")
 	GroupChatMessageType = PayloadType("group_chat_message")
 	TypingStatusType     = PayloadType("typing_status")
