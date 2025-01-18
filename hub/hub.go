@@ -19,8 +19,8 @@ type Hub struct {
 	clients ClientList
 }
 
-// AddClient adds newly connected client to Hub
-func (h *Hub) AddClient(user string, client *Client) {
+// addClient adds newly connected client to Hub
+func (h *Hub) addClient(user string, client *Client) {
 	h.Lock()
 	defer h.Unlock()
 
@@ -29,6 +29,10 @@ func (h *Hub) AddClient(user string, client *Client) {
 		return
 	}
 
+	if h.clients[username] == nil {
+		h.clients[username] = make(map[string]*Client)
+
+	}
 	h.clients[username][resource] = client
 }
 
@@ -90,11 +94,7 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 	user := helper.CreateUserFromUsernameAndResource(username, resource)
 	newClient := CreateClient(conn, h, user)
 
-	if h.clients[username] == nil {
-		h.clients[username] = make(map[string]*Client)
-
-	}
-	h.clients[username][resource] = newClient
+	h.addClient(user, newClient)
 
 	go newClient.ReadMessage(resource)
 	go newClient.WriteMessage()
