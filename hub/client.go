@@ -1,6 +1,7 @@
 package hub
 
 import (
+	"encoding/json"
 	"github.com/gorilla/websocket"
 	"log"
 	"time"
@@ -60,6 +61,49 @@ func (c *Client) ReadMessage() {
 			break
 		}
 
+		// parse incoming payload
+		var payloadType BasePayload
+		if err := json.Unmarshal(payload, &payloadType); err != nil {
+			log.Printf("error unmarshalling payload type: %v\n", err)
+			continue
+		}
+
+		switch payloadType.Type {
+		case ChatMessageType:
+			var chatMessage ChatMessage
+			if err := json.Unmarshal(payload, &chatMessage); err != nil {
+				log.Printf("error unmarshalling chat message: %v\n", err)
+				continue
+			}
+
+		case GroupChatMessageType:
+			var groupChatMessage GroupChatMessage
+			if err := json.Unmarshal(payload, &groupChatMessage); err != nil {
+				log.Printf("error unmarshalling group chat message: %v\n", err)
+				continue
+			}
+		case TypingStatusType:
+			var typingStatus TypingStatus
+			if err := json.Unmarshal(payload, &typingStatus); err != nil {
+				log.Printf("error unmarshalling typing status: %v\n", err)
+				continue
+			}
+		case EditMessageType:
+			var editMessage EditMessage
+			if err := json.Unmarshal(payload, &editMessage); err != nil {
+				log.Printf("error unmarshalling edit message: %v\n", err)
+				continue
+			}
+		case DeleteMessageType:
+			var deleteMessage DeleteMessage
+			if err := json.Unmarshal(payload, &deleteMessage); err != nil {
+				log.Printf("error unmarshalling delete message: %v\n", err)
+				continue
+			}
+		default:
+			// unknown payload type
+			// send it to user to tell its unknown or something
+		}
 		// add this message to queue to be handled my message archive write service
 		log.Println("MessageType: ", messageType)
 		log.Println("Payload: ", string(payload))
