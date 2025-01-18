@@ -2,18 +2,18 @@ package hub
 
 import "time"
 
-// PayloadType contains all the possible payload that a client can send
-type PayloadType string
+// payloadType contains all the possible payload that a client can send
+type payloadType string
 
 const (
-	ChatMessageType      = PayloadType("chat_message")
-	GroupChatMessageType = PayloadType("group_chat_message")
-	TypingStatusType     = PayloadType("typing_status")
-	EditMessageType      = PayloadType("edit_message")
-	DeleteMessageType    = PayloadType("delete_message")
+	chatMessageType      = payloadType("chat_message")
+	groupChatMessageType = payloadType("group_chat_message")
+	typingStatusType     = payloadType("typing_status")
+	editMessageType      = payloadType("edit_message")
+	deleteMessageType    = payloadType("delete_message")
 )
 
-// BasePayload is used to identify what's the actual payload that user has sent
+// basePayload is used to identify what's the actual payload that user has sent
 //
 // possible payload types that a client can send are:
 // "chat_message": 1 to 1 individual chat message
@@ -21,13 +21,13 @@ const (
 // "typing_status"
 // "edit_message"
 // "delete_message"
-type BasePayload struct {
-	Type PayloadType `json:"type"`
+type basePayload struct {
+	Type payloadType `json:"type"`
 }
 
-// ChatMessage is payload for "chat_message"
-type ChatMessage struct {
-	Type    PayloadType `json:"type"`
+// chatMessage is payload for "chat_message"
+type chatMessage struct {
+	Type    payloadType `json:"type"`
 	From    string      `json:"from"`
 	To      string      `json:"to"`
 	Id      string      `json:"id"`
@@ -36,16 +36,16 @@ type ChatMessage struct {
 	SendAt  time.Time   `json:"sendAt"`
 }
 
-// TypingStatus is payload for "typing_status"
-type TypingStatus struct {
-	Type PayloadType `json:"type"`
+// typingStatus is payload for "typing_status"
+type typingStatus struct {
+	Type payloadType `json:"type"`
 	From string      `json:"from"`
 	To   string      `json:"to"`
 }
 
-// EditMessage is payload for "edit_message"
-type EditMessage struct {
-	Type     PayloadType `json:"type"`
+// editMessage is payload for "edit_message"
+type editMessage struct {
+	Type     payloadType `json:"type"`
 	From     string      `json:"from"`
 	To       string      `json:"to"`
 	Id       string      `json:"id"`
@@ -53,18 +53,18 @@ type EditMessage struct {
 	EditedOn time.Time   `json:"editedOn"`
 }
 
-// DeleteMessage is payload for "delete_message"
-type DeleteMessage struct {
-	Type     PayloadType `json:"type"`
+// deleteMessage is payload for "delete_message"
+type deleteMessage struct {
+	Type     payloadType `json:"type"`
 	From     string      `json:"from"`
 	To       string      `json:"to"`
 	Id       string      `json:"id"`
 	Everyone bool        `json:"everyone"`
 }
 
-// GroupChatMessage is payload for "group_chat_message"
-type GroupChatMessage struct {
-	Type    PayloadType `json:"type"`
+// groupChatMessage is payload for "group_chat_message"
+type groupChatMessage struct {
+	Type    payloadType `json:"type"`
 	From    string      `json:"from"`
 	To      string      `json:"to"`
 	Id      string      `json:"id"`

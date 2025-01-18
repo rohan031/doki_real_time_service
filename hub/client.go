@@ -13,15 +13,17 @@ const (
 	incomingPayloadLimit = int64(512)
 )
 
-// ClientList contains all the connection that are currently
+type resourceList map[string]*client
+
+// clientList contains all the connection that are currently
 // connected to the server.
 //
 // each user has its own map of connected clients
 // at a time same user with multiple device can connect
-type ClientList map[string]map[string]*Client
+type clientList map[string]resourceList
 
-type Client struct {
-	Connection *websocket.Conn
+type client struct {
+	connection *websocket.Conn
 	hub        *Hub
 
 	// user is complete user with resource part
@@ -34,26 +36,26 @@ type Client struct {
 	write chan []byte
 }
 
-// ReadMessage reads all the incoming messages from the connection
-func (c *Client) ReadMessage(resource string) {
+// readMessage reads all the incoming messages from the connection
+func (c *client) readMessage(resource string) {
 	defer func() {
-		c.hub.RemoveClient(c.user)
+		c.hub.removeClient(c.user)
 	}()
 
 	// adding max payload any client can send through [connection]
-	c.Connection.SetReadLimit(incomingPayloadLimit)
+	c.connection.SetReadLimit(incomingPayloadLimit)
 
 	// set pong wait
-	if err := c.Connection.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+	if err := c.connection.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
 		log.Printf("error setting pongwait: %v\n", err)
 		return
 	}
-	c.Connection.SetPongHandler(func(string) error {
-		return c.Connection.SetReadDeadline(time.Now().Add(pongWait))
+	c.connection.SetPongHandler(func(string) error {
+		return c.connection.SetReadDeadline(time.Now().Add(pongWait))
 	})
 
 	for {
-		messageType, payload, err := c.Connection.ReadMessage()
+		messageType, payload, err := c.connection.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error reading message: %v\n", err)
@@ -62,41 +64,41 @@ func (c *Client) ReadMessage(resource string) {
 		}
 
 		// parse incoming payload
-		var payloadType BasePayload
+		var payloadType basePayload
 		if err := json.Unmarshal(payload, &payloadType); err != nil {
 			log.Printf("error unmarshalling payload type: %v\n", err)
 			continue
 		}
 
 		switch payloadType.Type {
-		case ChatMessageType:
-			var chatMessage ChatMessage
-			if err := json.Unmarshal(payload, &chatMessage); err != nil {
+		case chatMessageType:
+			var message chatMessage
+			if err := json.Unmarshal(payload, &message); err != nil {
 				log.Printf("error unmarshalling chat message: %v\n", err)
 				continue
 			}
 
-		case GroupChatMessageType:
-			var groupChatMessage GroupChatMessage
-			if err := json.Unmarshal(payload, &groupChatMessage); err != nil {
+		case groupChatMessageType:
+			var message groupChatMessage
+			if err := json.Unmarshal(payload, &message); err != nil {
 				log.Printf("error unmarshalling group chat message: %v\n", err)
 				continue
 			}
-		case TypingStatusType:
-			var typingStatus TypingStatus
-			if err := json.Unmarshal(payload, &typingStatus); err != nil {
+		case typingStatusType:
+			var status typingStatus
+			if err := json.Unmarshal(payload, &status); err != nil {
 				log.Printf("error unmarshalling typing status: %v\n", err)
 				continue
 			}
-		case EditMessageType:
-			var editMessage EditMessage
-			if err := json.Unmarshal(payload, &editMessage); err != nil {
+		case editMessageType:
+			var message editMessage
+			if err := json.Unmarshal(payload, &message); err != nil {
 				log.Printf("error unmarshalling edit message: %v\n", err)
 				continue
 			}
-		case DeleteMessageType:
-			var deleteMessage DeleteMessage
-			if err := json.Unmarshal(payload, &deleteMessage); err != nil {
+		case deleteMessageType:
+			var message deleteMessage
+			if err := json.Unmarshal(payload, &message); err != nil {
 				log.Printf("error unmarshalling delete message: %v\n", err)
 				continue
 			}
@@ -110,25 +112,25 @@ func (c *Client) ReadMessage(resource string) {
 	}
 }
 
-func (c *Client) WriteMessage() {
+func (c *client) writeMessage() {
 	// ping ticker
 	ticker := time.NewTicker(pingInterval)
 	defer func() {
 		ticker.Stop()
-		c.hub.RemoveClient(c.user)
+		c.hub.removeClient(c.user)
 	}()
 
 	for {
 		select {
 		case message, ok := <-c.write:
 			if !ok {
-				if err := c.Connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
-					log.Printf("error closing Connection: %v\n", err)
+				if err := c.connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
+					log.Printf("error closing connection: %v\n", err)
 				}
 				return
 			}
 
-			if err := c.Connection.WriteMessage(websocket.TextMessage, message); err != nil {
+			if err := c.connection.WriteMessage(websocket.TextMessage, message); err != nil {
 				log.Printf("error sending message: %v\n", err)
 			} else {
 				log.Printf("message send to client: %v\n\n", c.user)
@@ -136,7 +138,7 @@ func (c *Client) WriteMessage() {
 
 		case <-ticker.C:
 			log.Printf("sending ping to client: %v\n", c.user)
-			if err := c.Connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+			if err := c.connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				log.Printf("error sending ping to client: %v\n", err)
 				return
 			}
@@ -144,9 +146,9 @@ func (c *Client) WriteMessage() {
 	}
 }
 
-func CreateClient(conn *websocket.Conn, hub *Hub, user string) *Client {
-	return &Client{
-		Connection: conn,
+func createClient(conn *websocket.Conn, hub *Hub, user string) *client {
+	return &client{
+		connection: conn,
 		hub:        hub,
 		write:      make(chan []byte),
 		user:       user,
