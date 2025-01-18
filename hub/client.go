@@ -35,7 +35,7 @@ type Client struct {
 }
 
 // ReadMessage reads all the incoming messages from the connection
-func (c *Client) ReadMessage() {
+func (c *Client) ReadMessage(resource string) {
 	defer func() {
 		c.hub.RemoveClient(c.user)
 	}()

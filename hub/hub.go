@@ -96,7 +96,7 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 	}
 	h.clients[username][resource] = newClient
 
-	go newClient.ReadMessage()
+	go newClient.ReadMessage(resource)
 	go newClient.WriteMessage()
 
 }
