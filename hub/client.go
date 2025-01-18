@@ -51,11 +51,12 @@ func (c *client) readMessage(resource string) {
 		return
 	}
 	c.connection.SetPongHandler(func(string) error {
+		log.Printf("received pong from client: %v\n", c.user)
 		return c.connection.SetReadDeadline(time.Now().Add(pongWait))
 	})
 
 	for {
-		messageType, payload, err := c.connection.ReadMessage()
+		_, payload, err := c.connection.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error reading message: %v\n", err)
@@ -77,6 +78,7 @@ func (c *client) readMessage(resource string) {
 				log.Printf("error unmarshalling chat message: %v\n", err)
 				continue
 			}
+			handleChatMessagePayload(c.hub, &message, &payload, resource)
 
 		case groupChatMessageType:
 			var message groupChatMessage
@@ -106,9 +108,7 @@ func (c *client) readMessage(resource string) {
 			// unknown payload type
 			// send it to user to tell its unknown or something
 		}
-		// add this message to queue to be handled my message archive write service
-		log.Println("MessageType: ", messageType)
-		log.Println("Payload: ", string(payload))
+
 	}
 }
 

@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"crypto/rand"
 	"fmt"
 	"strings"
 )
@@ -30,5 +31,6 @@ func CreateUserFromUsernameAndResource(username, resource string) string {
 func RandomString() string {
 	length := 8
 	b := make([]byte, length+2)
+	rand.Read(b)
 	return fmt.Sprintf("%x", b)[2 : length+2]
 }

@@ -91,6 +91,8 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 	resource := helper.RandomString()
 	username := "rohan_verma__"
 
+	log.Printf("new connection resource: %v\n\n", resource)
+
 	user := helper.CreateUserFromUsernameAndResource(username, resource)
 	newClient := createClient(conn, h, user)
 
