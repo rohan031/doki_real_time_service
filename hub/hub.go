@@ -100,7 +100,6 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//resource := helper.RandomString()
 	resource := r.URL.Query().Get("resource")
 	if resource == "" {
 		resource = helper.RandomString()
@@ -113,7 +112,7 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	h.addClient(user, newClient)
 
-	go newClient.readMessage(resource)
+	go newClient.readMessage()
 	go newClient.writeMessage()
 
 }

@@ -30,6 +30,7 @@ const (
 // "delete_message"
 type basePayload struct {
 	Type payloadType `json:"type" validate:"required"`
+	From string      `json:"from" validate:"required"`
 }
 
 // chatMessage is payload for "chat_message"

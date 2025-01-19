@@ -1,6 +1,7 @@
 package hub
 
 import (
+	"doki.co.in/doki_real_time_service/helper"
 	"github.com/gorilla/websocket"
 	"log"
 	"time"
@@ -36,10 +37,12 @@ type client struct {
 }
 
 // readMessage reads all the incoming messages from the connection
-func (c *client) readMessage(resource string) {
+func (c *client) readMessage() {
 	defer func() {
 		c.hub.removeClient(c.user)
 	}()
+
+	username, resource := helper.GetUsernameAndResourceFromUser(c.user)
 
 	// adding max payload any client can send through [connection]
 	c.connection.SetReadLimit(incomingPayloadLimit)
@@ -65,7 +68,7 @@ func (c *client) readMessage(resource string) {
 
 		// parse incoming payload
 		var payloadType basePayload
-		if !unmarshalAndValidate(&payload, &payloadType) {
+		if !unmarshalAndValidate(&payload, &payloadType) && payloadType.From == username {
 			// send error to user
 			continue
 		}
@@ -73,8 +76,8 @@ func (c *client) readMessage(resource string) {
 		switch payloadType.Type {
 		case chatMessageType:
 			var message chatMessage
-			if unmarshalAndValidate(&payload, &message) {
-				handleChatMessagePayload(c.hub, &message, &payload, resource)
+			if unmarshalAndValidate(&payload, &message) && message.From == username {
+				handleChatMessagePayload(c.hub, &message, &payload, username, resource)
 			}
 		case groupChatMessageType:
 			var message groupChatMessage
