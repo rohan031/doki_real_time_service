@@ -79,10 +79,10 @@ func (c *client) readMessage() {
 			if unmarshalAndValidate(&payload, &message) && message.From == username {
 				handleChatMessagePayload(c.hub, &message, &payload, username, resource)
 			}
-		case groupChatMessageType:
-			var message groupChatMessage
-			if unmarshalAndValidate(&payload, &message) {
-			}
+		//case groupChatMessageType:
+		//	var message groupChatMessage
+		//	if unmarshalAndValidate(&payload, &message) {
+		//	}
 		case typingStatusType:
 			var status typingStatus
 			if unmarshalAndValidate(&payload, &status) {

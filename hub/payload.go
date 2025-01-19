@@ -70,16 +70,16 @@ type deleteMessage struct {
 	Everyone bool        `json:"everyone" validate:"required"`
 }
 
-// groupChatMessage is payload for "group_chat_message"
-type groupChatMessage struct {
-	Type    payloadType `json:"type" validate:"required"`
-	From    string      `json:"from" validate:"required"`
-	To      string      `json:"to" validate:"required"`
-	Id      string      `json:"id" validate:"required"`
-	Subject string      `json:"subject" validate:"required"`
-	Body    string      `json:"body" validate:"required"`
-	SendAt  time.Time   `json:"sendAt" validate:"required"`
-}
+//// groupChatMessage is payload for "group_chat_message"
+//type groupChatMessage struct {
+//	Type    payloadType `json:"type" validate:"required"`
+//	From    string      `json:"from" validate:"required"`
+//	To      string      `json:"to" validate:"required"`
+//	Id      string      `json:"id" validate:"required"`
+//	Subject string      `json:"subject" validate:"required"`
+//	Body    string      `json:"body" validate:"required"`
+//	SendAt  time.Time   `json:"sendAt" validate:"required"`
+//}
 
 // unmarshalAndValidate first unmarshal payload json and validates it
 func unmarshalAndValidate[T any](payload *[]byte, target *T) bool {
