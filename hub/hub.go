@@ -2,6 +2,8 @@ package hub
 
 import (
 	"doki.co.in/doki_real_time_service/helper"
+	"errors"
+	"github.com/MicahParks/keyfunc/v3"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
@@ -17,6 +19,7 @@ var websocketUpgrader = websocket.Upgrader{
 type Hub struct {
 	sync.RWMutex
 	clients clientList
+	jwks    *keyfunc.Keyfunc
 }
 
 // addClient adds newly connected client to Hub
@@ -80,18 +83,30 @@ func (h *Hub) getAllConnectedClients(username string) map[string]*client {
 // ServeWS methods takes the current [http] request
 // and upgrade it to [websocket] connection
 func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
-	log.Println("new connection for websocket")
-
-	conn, err := websocketUpgrader.Upgrade(w, r, nil)
+	username, err := parseAuthHeader(r, h.jwks)
 	if err != nil {
-		log.Printf("error upgrading incoming http connection to websocket: %v\n", err)
+		var authErrorObject *authError
+		if errors.As(err, &authErrorObject) {
+			http.Error(w, authErrorObject.Error(), authErrorObject.Code)
+		}
 		return
 	}
 
-	resource := helper.RandomString()
-	username := "rohan_verma__"
+	log.Println("new connection for websocket")
+	conn, err := websocketUpgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("error upgrading incoming http connection to websocket: %v\n", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 
-	log.Printf("new connection resource: %v\n\n", resource)
+	//resource := helper.RandomString()
+	resource := r.URL.Query().Get("resource")
+	if resource == "" {
+		resource = helper.RandomString()
+	}
+
+	log.Printf("new connection: %v@%v\n\n", username, resource)
 
 	user := helper.CreateUserFromUsernameAndResource(username, resource)
 	newClient := createClient(conn, h, user)
@@ -104,8 +119,9 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateHub creates a new hub
-func CreateHub() *Hub {
+func CreateHub(jwks *keyfunc.Keyfunc) *Hub {
 	return &Hub{
 		clients: make(clientList),
+		jwks:    jwks,
 	}
 }
