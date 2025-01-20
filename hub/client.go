@@ -63,7 +63,7 @@ func (c *client) readMessage() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error reading message: %v\n", err)
 			}
-			break
+			return
 		}
 
 		// parse incoming payload
