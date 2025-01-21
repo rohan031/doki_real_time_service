@@ -16,6 +16,10 @@ func main() {
 		log.Printf("error loading env file: %v\n", err)
 	}
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	userPoolID := os.Getenv("USER_POOL_ID")
 	region := os.Getenv("REGION")
 	jwksURL := fmt.Sprintf("https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json", region, userPoolID)
@@ -29,5 +33,5 @@ func main() {
 
 	newHub := hub.CreateHub(&jwks)
 	http.HandleFunc("/ws", newHub.ServeWS)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":"+"port", nil))
 }
