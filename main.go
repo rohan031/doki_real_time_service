@@ -33,5 +33,5 @@ func main() {
 
 	newHub := hub.CreateHub(&jwks)
 	http.HandleFunc("/ws", newHub.ServeWS)
-	log.Fatal(http.ListenAndServe(":"+"port", nil))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
