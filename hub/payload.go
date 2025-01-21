@@ -66,7 +66,7 @@ type deleteMessage struct {
 	Type     payloadType `json:"type" validate:"required"`
 	From     string      `json:"from" validate:"required"`
 	To       string      `json:"to" validate:"required"`
-	Id       string      `json:"id" validate:"required"`
+	Id       []string    `json:"id" validate:"required"`
 	Everyone bool        `json:"everyone" validate:"required"`
 }
 

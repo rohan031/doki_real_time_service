@@ -29,3 +29,39 @@ func handleTypingStatusPayload(h *Hub, status *typingStatus, payload *[]byte) {
 		conn.write <- *payload
 	}
 }
+
+func handleDeleteMessagePayload(h *Hub, message *deleteMessage, payload *[]byte, username, resource string) {
+	senderConnectedClients := h.getAllConnectedClients(username)
+
+	if message.Everyone {
+		recipient := message.To
+		recipientConnectedClients := h.getAllConnectedClients(recipient)
+
+		for _, conn := range recipientConnectedClients {
+			conn.write <- *payload
+		}
+	}
+
+	for res, conn := range senderConnectedClients {
+		if res != resource {
+			conn.write <- *payload
+		}
+	}
+}
+
+func handleEditMessagePayload(h *Hub, message *editMessage, payload *[]byte, username, resource string) {
+	recipient := message.To
+
+	recipientConnectedClients := h.getAllConnectedClients(recipient)
+	senderConnectedClients := h.getAllConnectedClients(username)
+
+	for _, conn := range recipientConnectedClients {
+		conn.write <- *payload
+	}
+
+	for res, conn := range senderConnectedClients {
+		if res != resource {
+			conn.write <- *payload
+		}
+	}
+}

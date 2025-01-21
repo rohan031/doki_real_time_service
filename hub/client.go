@@ -91,10 +91,12 @@ func (c *client) readMessage() {
 		case editMessageType:
 			var message editMessage
 			if unmarshalAndValidate(&payload, &message) {
+				handleEditMessagePayload(c.hub, &message, &payload, username, resource)
 			}
 		case deleteMessageType:
 			var message deleteMessage
 			if unmarshalAndValidate(&payload, &message) {
+				handleDeleteMessagePayload(c.hub, &message, &payload, username, resource)
 			}
 		default:
 			// unknown payload type
