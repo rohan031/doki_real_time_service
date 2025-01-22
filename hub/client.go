@@ -39,7 +39,7 @@ type client struct {
 // readMessage reads all the incoming messages from the connection
 func (c *client) readMessage() {
 	defer func() {
-		c.hub.removeClient(c.user)
+		c.hub.removeClient(c)
 	}()
 
 	username, resource := helper.GetUsernameAndResourceFromUser(c.user)
@@ -112,7 +112,7 @@ func (c *client) writeMessage() {
 	ticker := time.NewTicker(pingInterval)
 	defer func() {
 		ticker.Stop()
-		c.hub.removeClient(c.user)
+		c.hub.removeClient(c)
 	}()
 
 	for {

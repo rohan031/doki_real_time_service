@@ -40,16 +40,16 @@ func (h *Hub) addClient(user string, client *client) {
 }
 
 // removeClient closes and removes connection from Hub
-func (h *Hub) removeClient(user string) {
+func (h *Hub) removeClient(c *client) {
 	h.Lock()
 	defer h.Unlock()
 
-	username, resource := helper.GetUsernameAndResourceFromUser(user)
+	username, resource := helper.GetUsernameAndResourceFromUser(c.user)
 	if username == "" || resource == "" {
 		return
 	}
 
-	if conn, ok := h.clients[username][resource]; ok {
+	if conn, ok := h.clients[username][resource]; ok && c.connection == conn.connection {
 		// close the websocket connection
 		_ = conn.connection.Close()
 
