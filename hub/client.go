@@ -10,7 +10,7 @@ import (
 const (
 	pongWait             = 60 * time.Second
 	pingInterval         = (pongWait * 9) / 10
-	incomingPayloadLimit = int64(512)
+	incomingPayloadLimit = int64(16384)
 )
 
 type resourceList map[string]*client
