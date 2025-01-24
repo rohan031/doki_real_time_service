@@ -6,13 +6,14 @@ package hub
 func handleChatMessagePayload(h *Hub, message *chatMessage, payload *[]byte, username, resource string) {
 	recipient := message.To
 
-	recipientConnectedClients := h.getAllConnectedClients(recipient)
-	senderConnectedClients := h.getAllConnectedClients(username)
-
-	for _, conn := range recipientConnectedClients {
-		conn.write <- *payload
+	if recipient != username {
+		recipientConnectedClients := h.getAllConnectedClients(recipient)
+		for _, conn := range recipientConnectedClients {
+			conn.write <- *payload
+		}
 	}
 
+	senderConnectedClients := h.getAllConnectedClients(username)
 	for res, conn := range senderConnectedClients {
 		if res != resource {
 			conn.write <- *payload
@@ -23,8 +24,11 @@ func handleChatMessagePayload(h *Hub, message *chatMessage, payload *[]byte, use
 // handleTypingStatusPayload sends typing status to all the connected recipient
 func handleTypingStatusPayload(h *Hub, status *typingStatus, payload *[]byte) {
 	recipient := status.To
-	recipientConnectedClients := h.getAllConnectedClients(recipient)
+	if recipient == status.From {
+		return
+	}
 
+	recipientConnectedClients := h.getAllConnectedClients(recipient)
 	for _, conn := range recipientConnectedClients {
 		conn.write <- *payload
 	}
@@ -32,11 +36,10 @@ func handleTypingStatusPayload(h *Hub, status *typingStatus, payload *[]byte) {
 
 func handleDeleteMessagePayload(h *Hub, message *deleteMessage, payload *[]byte, username, resource string) {
 	senderConnectedClients := h.getAllConnectedClients(username)
+	recipient := message.To
 
-	if message.Everyone {
-		recipient := message.To
+	if message.Everyone && recipient != username {
 		recipientConnectedClients := h.getAllConnectedClients(recipient)
-
 		for _, conn := range recipientConnectedClients {
 			conn.write <- *payload
 		}
@@ -52,13 +55,14 @@ func handleDeleteMessagePayload(h *Hub, message *deleteMessage, payload *[]byte,
 func handleEditMessagePayload(h *Hub, message *editMessage, payload *[]byte, username, resource string) {
 	recipient := message.To
 
-	recipientConnectedClients := h.getAllConnectedClients(recipient)
-	senderConnectedClients := h.getAllConnectedClients(username)
-
-	for _, conn := range recipientConnectedClients {
-		conn.write <- *payload
+	if recipient != username {
+		recipientConnectedClients := h.getAllConnectedClients(recipient)
+		for _, conn := range recipientConnectedClients {
+			conn.write <- *payload
+		}
 	}
 
+	senderConnectedClients := h.getAllConnectedClients(username)
 	for res, conn := range senderConnectedClients {
 		if res != resource {
 			conn.write <- *payload
