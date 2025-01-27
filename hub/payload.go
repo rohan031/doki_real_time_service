@@ -67,7 +67,7 @@ type deleteMessage struct {
 	From     string      `json:"from" validate:"required"`
 	To       string      `json:"to" validate:"required"`
 	Id       []string    `json:"id" validate:"required"`
-	Everyone bool        `json:"everyone" validate:"required"`
+	Everyone bool        `json:"everyone,string"`
 }
 
 //// groupChatMessage is payload for "group_chat_message"
