@@ -1,7 +1,7 @@
 package hub
 
 import (
-	"doki.co.in/doki_real_time_service/helper"
+	"doki.co.in/doki_real_time_service/utils"
 	"errors"
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/gorilla/websocket"
@@ -27,7 +27,7 @@ func (h *Hub) addClient(user string, client *client) {
 	h.Lock()
 	defer h.Unlock()
 
-	username, resource := helper.GetUsernameAndResourceFromUser(user)
+	username, resource := utils.GetUsernameAndResourceFromUser(user)
 	if username == "" || resource == "" {
 		return
 	}
@@ -44,7 +44,7 @@ func (h *Hub) removeClient(c *client) {
 	h.Lock()
 	defer h.Unlock()
 
-	username, resource := helper.GetUsernameAndResourceFromUser(c.user)
+	username, resource := utils.GetUsernameAndResourceFromUser(c.user)
 	if username == "" || resource == "" {
 		return
 	}
@@ -66,7 +66,7 @@ func (h *Hub) removeClient(c *client) {
 // getIndividualClient is used to get user connected client in particular resource
 // this will be used when server needs to send updates for the post and other user subscriptions
 func (h *Hub) getIndividualClient(user string) *client {
-	username, resource := helper.GetUsernameAndResourceFromUser(user)
+	username, resource := utils.GetUsernameAndResourceFromUser(user)
 	if username == "" || resource == "" {
 		return nil
 	}
@@ -102,12 +102,12 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	resource := r.URL.Query().Get("resource")
 	if resource == "" {
-		resource = helper.RandomString()
+		resource = utils.RandomString()
 	}
 
 	log.Printf("new connection: %v@%v\n\n", username, resource)
 
-	user := helper.CreateUserFromUsernameAndResource(username, resource)
+	user := utils.CreateUserFromUsernameAndResource(username, resource)
 	newClient := createClient(conn, h, user)
 
 	h.addClient(user, newClient)

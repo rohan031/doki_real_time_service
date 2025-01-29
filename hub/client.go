@@ -1,7 +1,7 @@
 package hub
 
 import (
-	"doki.co.in/doki_real_time_service/helper"
+	"doki.co.in/doki_real_time_service/utils"
 	"github.com/gorilla/websocket"
 	"log"
 	"time"
@@ -42,7 +42,7 @@ func (c *client) readMessage() {
 		c.hub.removeClient(c)
 	}()
 
-	username, resource := helper.GetUsernameAndResourceFromUser(c.user)
+	username, resource := utils.GetUsernameAndResourceFromUser(c.user)
 
 	// adding max payload any client can send through [connection]
 	c.connection.SetReadLimit(incomingPayloadLimit)
