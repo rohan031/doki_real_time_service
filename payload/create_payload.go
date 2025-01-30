@@ -37,6 +37,21 @@ func CreatePayload(data *[]byte, from string) (Payload, error) {
 		if unmarshalAndValidate(data, &message) {
 			return &message, nil
 		}
+	case userSendFriendRequestType:
+		var request userSendFriendRequest
+		if unmarshalAndValidate(data, &request) {
+			return &request, nil
+		}
+	case userAcceptedFriendRequestType:
+		var request userAcceptFriendRequest
+		if unmarshalAndValidate(data, &request) {
+			return &request, nil
+		}
+	case userRemovesFriendRelationType:
+		var request userRemovesFriendRelation
+		if unmarshalAndValidate(data, &request) {
+			return &request, nil
+		}
 	default:
 		return nil, &InvalidPayload{
 			reason: "unknown payload type",
