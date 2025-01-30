@@ -1,6 +1,7 @@
 package hub
 
 import (
+	"doki.co.in/doki_real_time_service/client"
 	"doki.co.in/doki_real_time_service/utils"
 	"errors"
 	"github.com/MicahParks/keyfunc/v3"
@@ -23,7 +24,7 @@ type Hub struct {
 }
 
 // addClient adds newly connected client to Hub
-func (h *Hub) addClient(user string, client *client) {
+func (h *Hub) addClient(user string, client client.Client) {
 	h.Lock()
 	defer h.Unlock()
 
@@ -40,18 +41,20 @@ func (h *Hub) addClient(user string, client *client) {
 }
 
 // removeClient closes and removes connection from Hub
-func (h *Hub) removeClient(c *client) {
+func (h *Hub) removeClient(c client.Client) {
 	h.Lock()
 	defer h.Unlock()
 
-	username, resource := utils.GetUsernameAndResourceFromUser(c.user)
+	username, resource := c.GetUserInfo()
 	if username == "" || resource == "" {
 		return
 	}
 
-	if conn, ok := h.clients[username][resource]; ok && c.connection == conn.connection {
+	// check the connection we are tyring to remove and the connection that is present are same
+	// this can happen if client resource is same but underlying tcp connection is changed
+	if conn, ok := h.clients[username][resource]; ok && c.GetConnection() == conn.GetConnection() {
 		// close the websocket connection
-		_ = conn.connection.Close()
+		_ = conn.GetConnection().Close()
 
 		// remove resource from username
 		delete(h.clients[username], resource)
@@ -63,20 +66,21 @@ func (h *Hub) removeClient(c *client) {
 	}
 }
 
-// getIndividualClient is used to get user connected client in particular resource
+// GetIndividualClient is used to get user connected client in particular resource
 // this will be used when server needs to send updates for the post and other user subscriptions
-func (h *Hub) getIndividualClient(user string) *client {
+func (h *Hub) GetIndividualClient(user string) client.Client {
 	username, resource := utils.GetUsernameAndResourceFromUser(user)
 	if username == "" || resource == "" {
 		return nil
 	}
 
 	return h.clients[username][resource]
+
 }
 
-// getAllConnectedClients will return all the connected clients for a particular user
+// GetAllConnectedClients will return all the connected clients for a particular user
 // this will be used when forwarding user messages
-func (h *Hub) getAllConnectedClients(username string) map[string]*client {
+func (h *Hub) GetAllConnectedClients(username string) map[string]client.Client {
 	return h.clients[username]
 }
 

@@ -1,6 +1,8 @@
 package hub
 
 import (
+	"doki.co.in/doki_real_time_service/client"
+	"doki.co.in/doki_real_time_service/payload"
 	"doki.co.in/doki_real_time_service/utils"
 	"github.com/gorilla/websocket"
 	"log"
@@ -13,38 +15,56 @@ const (
 	incomingPayloadLimit = int64(16384)
 )
 
-type resourceList map[string]*client
+type rawClient interface {
+	client.Client
+	readMessage()
+	writeMessage()
+}
+
+type resourceList map[string]client.Client
 
 // clientList contains all the connection that are currently
 // connected to the server.
 //
-// each user has its own map of connected clients
+// each user has its own map of connected Clients
 // at a time same user with multiple device can connect
 type clientList map[string]resourceList
 
-type client struct {
+type clientImpl struct {
 	connection *websocket.Conn
 	hub        *Hub
 
 	// user is complete user with resource part
-	// e.g. username: rohan_verma__, is connected through [doki] native client
+	// e.g. username: rohan_verma__, is connected through [doki] native Client
 	// than user will be: rohan_verma__@{resource} where resource is unique string
-	// to identify the particular client
+	// to identify the particular Client
 	user string
 
 	// channel buffering to prevent writing to connection concurrently
 	write chan []byte
 }
 
+func (c *clientImpl) GetConnection() *websocket.Conn {
+	return c.connection
+}
+
+func (c *clientImpl) GetUserInfo() (string, string) {
+	return utils.GetUsernameAndResourceFromUser(c.user)
+}
+
+func (c *clientImpl) WriteToChannel(data *[]byte) {
+	c.write <- *data
+}
+
 // readMessage reads all the incoming messages from the connection
-func (c *client) readMessage() {
+func (c *clientImpl) readMessage() {
 	defer func() {
 		c.hub.removeClient(c)
 	}()
 
-	username, resource := utils.GetUsernameAndResourceFromUser(c.user)
+	username, resource := c.GetUserInfo()
 
-	// adding max payload any client can send through [connection]
+	// adding max payload any Client can send through [connection]
 	c.connection.SetReadLimit(incomingPayloadLimit)
 
 	// set pong wait
@@ -53,12 +73,12 @@ func (c *client) readMessage() {
 		return
 	}
 	c.connection.SetPongHandler(func(string) error {
-		log.Printf("received pong from client: %v\n", c.user)
+		log.Printf("received pong from Client: %v\n", c.user)
 		return c.connection.SetReadDeadline(time.Now().Add(pongWait))
 	})
 
 	for {
-		_, payload, err := c.connection.ReadMessage()
+		_, data, err := c.connection.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error reading message: %v\n", err)
@@ -66,48 +86,18 @@ func (c *client) readMessage() {
 			return
 		}
 
-		// parse incoming payload
-		var payloadType basePayload
-		if !unmarshalAndValidate(&payload, &payloadType) && payloadType.From == username {
-			// send error to user
+		incomingPayload, err := payload.CreatePayload(&data, username)
+		if err != nil {
+			log.Println(err.Error())
 			continue
 		}
 
-		switch payloadType.Type {
-		case chatMessageType:
-			var message chatMessage
-			if unmarshalAndValidate(&payload, &message) && message.From == username {
-				handleChatMessagePayload(c.hub, &message, &payload, username, resource)
-			}
-		//case groupChatMessageType:
-		//	var message groupChatMessage
-		//	if unmarshalAndValidate(&payload, &message) {
-		//	}
-		case typingStatusType:
-			var status typingStatus
-			if unmarshalAndValidate(&payload, &status) {
-				handleTypingStatusPayload(c.hub, &status, &payload)
-			}
-		case editMessageType:
-			var message editMessage
-			if unmarshalAndValidate(&payload, &message) {
-				handleEditMessagePayload(c.hub, &message, &payload, username, resource)
-			}
-		case deleteMessageType:
-			var message deleteMessage
-			if unmarshalAndValidate(&payload, &message) {
-				handleDeleteMessagePayload(c.hub, &message, &payload, username, resource)
-			}
-		default:
-			// unknown payload type
-			// send it to user to tell its unknown or something
-			log.Println("unknown payload type")
-		}
-
+		// sending payload to relevant recipients
+		incomingPayload.SendPayload(&data, c.hub, resource)
 	}
 }
 
-func (c *client) writeMessage() {
+func (c *clientImpl) writeMessage() {
 	// ping ticker
 	ticker := time.NewTicker(pingInterval)
 	defer func() {
@@ -128,21 +118,21 @@ func (c *client) writeMessage() {
 			if err := c.connection.WriteMessage(websocket.TextMessage, message); err != nil {
 				log.Printf("error sending message: %v\n", err)
 			} else {
-				log.Printf("message send to client: %v\n\n", c.user)
+				log.Printf("message send to Client: %v\n\n", c.user)
 			}
 
 		case <-ticker.C:
-			log.Printf("sending ping to client: %v\n", c.user)
+			log.Printf("sending ping to Client: %v\n", c.user)
 			if err := c.connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-				log.Printf("error sending ping to client: %v\n", err)
+				log.Printf("error sending ping to Client: %v\n", err)
 				return
 			}
 		}
 	}
 }
 
-func createClient(conn *websocket.Conn, hub *Hub, user string) *client {
-	return &client{
+func createClient(conn *websocket.Conn, hub *Hub, user string) rawClient {
+	return &clientImpl{
 		connection: conn,
 		hub:        hub,
 		write:      make(chan []byte),
