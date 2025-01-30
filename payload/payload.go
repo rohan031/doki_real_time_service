@@ -1,9 +1,9 @@
 package payload
 
 import (
+	"doki.co.in/doki_real_time_service/client"
 	"encoding/json"
 	"github.com/go-playground/validator/v10"
-	"github.com/gorilla/websocket"
 	"log"
 )
 
@@ -13,20 +13,15 @@ var validate = validator.New()
 type payloadType string
 
 type Payload interface {
-	SendPayload(*[]byte, *hub, string)
-}
-
-// this is payload client interface to handle sending payload
-type client interface {
-	GetConnection() *websocket.Conn
-	GetUserInfo() (string, string)
-	WriteToChannel(*[]byte)
+	// SendPayload expects raw payload, hub, and senders resource
+	SendPayload(*[]byte, hub, string)
 }
 
 // this is payload hub interface required to send data
 type hub interface {
-	GetAllConnectedClients(string) map[string]*client
-	GetIndividualClient(string) *client
+	GetAllConnectedClients(string) map[string]client.Client
+
+	GetIndividualClient(string) client.Client
 }
 
 type InvalidPayload struct {
@@ -38,13 +33,6 @@ func (p *InvalidPayload) Error() string {
 }
 
 // basePayload is used to identify what's the actual payload that user has sent
-//
-// possible payload types that a client can send are:
-// "chat_message": 1 to 1 individual chat message
-// "group_chat_message": messages that are send to group chats
-// "typing_status"
-// "edit_message"
-// "delete_message"
 type basePayload struct {
 	Type payloadType `json:"type" validate:"required"`
 	From string      `json:"from" validate:"required"`
@@ -63,52 +51,4 @@ func unmarshalAndValidate[T any](payload *[]byte, target *T) bool {
 	}
 
 	return true
-}
-
-// CreatePayload is factory method to create different payloads based on type
-func CreatePayload(data *[]byte, from string) (Payload, error) {
-	var base basePayload
-	if !unmarshalAndValidate(data, &base) {
-		return nil, &InvalidPayload{
-			reason: "Invalid payload received.",
-		}
-	}
-
-	if base.From != from {
-		return nil, &InvalidPayload{
-			reason: "Client username and payload from mismatch.",
-		}
-	}
-
-	switch base.Type {
-	case chatMessageType:
-		var message chatMessage
-		if unmarshalAndValidate(data, &message) {
-			return &message, nil
-		}
-
-	case typingStatusType:
-		var status typingStatus
-		if unmarshalAndValidate(data, &status) {
-			return &status, nil
-		}
-	case editMessageType:
-		var message editMessage
-		if unmarshalAndValidate(data, &message) {
-			return &message, nil
-		}
-	case deleteMessageType:
-		var message deleteMessage
-		if unmarshalAndValidate(data, &message) {
-			return &message, nil
-		}
-	default:
-		return nil, &InvalidPayload{
-			reason: "unknown payload type",
-		}
-	}
-
-	return nil, &InvalidPayload{
-		reason: "Invalid payload received",
-	}
 }

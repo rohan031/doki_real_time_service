@@ -23,22 +23,22 @@ type chatMessage struct {
 	SendAt  time.Time   `json:"sendAt" validate:"required"`
 }
 
-func (message *chatMessage) SendPayload(data *[]byte, h *hub, senderResource string) {
+func (message *chatMessage) SendPayload(data *[]byte, h hub, senderResource string) {
 	recipient := message.To
 	sender := message.From
 
 	// this prevents sending messages twice when user sends self messages
 	if recipient != sender {
-		recipientConnectedClients := (*h).GetAllConnectedClients(recipient)
+		recipientConnectedClients := h.GetAllConnectedClients(recipient)
 		for _, conn := range recipientConnectedClients {
-			(*conn).WriteToChannel(data)
+			conn.WriteToChannel(data)
 		}
 	}
 
-	senderConnectedClients := (*h).GetAllConnectedClients(sender)
+	senderConnectedClients := h.GetAllConnectedClients(sender)
 	for res, conn := range senderConnectedClients {
 		if res != senderResource {
-			(*conn).WriteToChannel(data)
+			conn.WriteToChannel(data)
 		}
 	}
 
@@ -51,15 +51,15 @@ type typingStatus struct {
 	To   string      `json:"to" validate:"required"`
 }
 
-func (status *typingStatus) SendPayload(data *[]byte, h *hub, _ string) {
+func (status *typingStatus) SendPayload(data *[]byte, h hub, _ string) {
 	recipient := status.To
 	if recipient == status.From {
 		return
 	}
 
-	recipientConnectedClients := (*h).GetAllConnectedClients(recipient)
+	recipientConnectedClients := h.GetAllConnectedClients(recipient)
 	for _, conn := range recipientConnectedClients {
-		(*conn).WriteToChannel(data)
+		conn.WriteToChannel(data)
 	}
 }
 
@@ -73,21 +73,21 @@ type editMessage struct {
 	EditedOn time.Time   `json:"editedOn" validate:"required"`
 }
 
-func (message *editMessage) SendPayload(data *[]byte, h *hub, senderResource string) {
+func (message *editMessage) SendPayload(data *[]byte, h hub, senderResource string) {
 	recipient := message.To
 	sender := message.From
 
 	if recipient != sender {
-		recipientConnectedClients := (*h).GetAllConnectedClients(recipient)
+		recipientConnectedClients := h.GetAllConnectedClients(recipient)
 		for _, conn := range recipientConnectedClients {
-			(*conn).WriteToChannel(data)
+			conn.WriteToChannel(data)
 		}
 	}
 
-	senderConnectedClients := (*h).GetAllConnectedClients(sender)
+	senderConnectedClients := h.GetAllConnectedClients(sender)
 	for res, conn := range senderConnectedClients {
 		if res != senderResource {
-			(*conn).WriteToChannel(data)
+			conn.WriteToChannel(data)
 		}
 	}
 }
@@ -101,21 +101,21 @@ type deleteMessage struct {
 	Everyone bool        `json:"everyone,string"`
 }
 
-func (message *deleteMessage) SendPayload(data *[]byte, h *hub, senderResource string) {
+func (message *deleteMessage) SendPayload(data *[]byte, h hub, senderResource string) {
 	recipient := message.To
 	sender := message.From
 
 	if message.Everyone && recipient != sender {
-		recipientConnectedClients := (*h).GetAllConnectedClients(recipient)
+		recipientConnectedClients := h.GetAllConnectedClients(recipient)
 		for _, conn := range recipientConnectedClients {
-			(*conn).WriteToChannel(data)
+			conn.WriteToChannel(data)
 		}
 	}
 
-	senderConnectedClients := (*h).GetAllConnectedClients(sender)
+	senderConnectedClients := h.GetAllConnectedClients(sender)
 	for res, conn := range senderConnectedClients {
 		if res != senderResource {
-			(*conn).WriteToChannel(data)
+			conn.WriteToChannel(data)
 		}
 	}
 }
