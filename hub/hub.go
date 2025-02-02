@@ -54,7 +54,9 @@ func (h *Hub) removeClient(c client.Client) {
 	// this can happen if client resource is same but underlying tcp connection is changed
 	if conn, ok := h.clients[username][resource]; ok && c.GetConnection() == conn.GetConnection() {
 		// close the websocket connection
-		_ = conn.GetConnection().Close()
+		if conn.GetConnection() != nil {
+			_ = conn.GetConnection().Close()
+		}
 
 		// remove resource from username
 		delete(h.clients[username], resource)
