@@ -2,6 +2,7 @@ package main
 
 import (
 	"doki.co.in/doki_real_time_service/hub"
+	"doki.co.in/doki_real_time_service/payload"
 	"fmt"
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/joho/godotenv"
@@ -30,7 +31,8 @@ func main() {
 	}
 
 	fmt.Println("Doki real time service")
-
+	// init payloads that can be received
+	payload.InitPayload()
 	newHub := hub.CreateHub(&jwks)
 	http.HandleFunc("/ws", newHub.ServeWS)
 	log.Fatal(http.ListenAndServe(":"+port, nil))

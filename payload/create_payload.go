@@ -1,7 +1,10 @@
 package payload
 
+var payloadMap = make(map[payloadType]func() Payload)
+
 // CreatePayload is factory method to create different payloads based on type
 func CreatePayload(data *[]byte, from string) (Payload, error) {
+	// base payload to get type from data
 	var base basePayload
 	if !unmarshalAndValidate(data, &base) {
 		return nil, &InvalidPayload{
@@ -9,56 +12,28 @@ func CreatePayload(data *[]byte, from string) (Payload, error) {
 		}
 	}
 
+	// basic routing check to see if sender is user only
 	if base.From != from {
 		return nil, &InvalidPayload{
 			reason: "Client username and payload from mismatch.",
 		}
 	}
 
-	switch base.Type {
-	case chatMessageType:
-		var message chatMessage
-		if unmarshalAndValidate(data, &message) {
-			return &message, nil
-		}
-
-	case typingStatusType:
-		var status typingStatus
-		if unmarshalAndValidate(data, &status) {
-			return &status, nil
-		}
-	case editMessageType:
-		var message editMessage
-		if unmarshalAndValidate(data, &message) {
-			return &message, nil
-		}
-	case deleteMessageType:
-		var message deleteMessage
-		if unmarshalAndValidate(data, &message) {
-			return &message, nil
-		}
-	case userSendFriendRequestType:
-		var request userSendFriendRequest
-		if unmarshalAndValidate(data, &request) {
-			return &request, nil
-		}
-	case userAcceptedFriendRequestType:
-		var request userAcceptFriendRequest
-		if unmarshalAndValidate(data, &request) {
-			return &request, nil
-		}
-	case userRemovesFriendRelationType:
-		var request userRemovesFriendRelation
-		if unmarshalAndValidate(data, &request) {
-			return &request, nil
-		}
-	default:
+	// get factory method to generate the  actual payload based on type
+	factory, exists := payloadMap[base.Type]
+	if !exists {
 		return nil, &InvalidPayload{
-			reason: "unknown payload type",
+			reason: "Invalid payload received",
 		}
 	}
 
-	return nil, &InvalidPayload{
-		reason: "Invalid payload received",
+	// validate the payload and reject if not proper
+	payload := factory()
+	if unmarshalAndValidate(data, &payload) {
+		return nil, &InvalidPayload{
+			reason: "Invalid payload received",
+		}
 	}
+
+	return payload, nil
 }

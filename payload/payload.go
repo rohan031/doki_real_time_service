@@ -52,3 +52,20 @@ func unmarshalAndValidate[T any](payload *[]byte, target *T) bool {
 
 	return true
 }
+
+func InitPayload() {
+	// instant messaging payloads
+	payloadMap[chatMessageType] = func() Payload { return &chatMessage{} }
+	payloadMap[typingStatusType] = func() Payload { return &typingStatus{} }
+	payloadMap[editMessageType] = func() Payload { return &editMessage{} }
+	payloadMap[deleteMessageType] = func() Payload { return &deleteMessage{} }
+
+	// user to user action payload
+	payloadMap[userSendFriendRequestType] = func() Payload { return &userSendFriendRequest{} }
+	payloadMap[userAcceptedFriendRequestType] = func() Payload { return &userAcceptFriendRequest{} }
+	payloadMap[userRemovesFriendRelationType] = func() Payload { return &userRemovesFriendRelation{} }
+
+	// user profile self action payload
+	payloadMap[userUpdateProfileType] = func() Payload { return &userUpdateProfile{} }
+	payloadMap[userCreateRootNodeType] = func() Payload { return &userCreateRootNode{} }
+}
