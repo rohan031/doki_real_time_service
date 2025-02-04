@@ -29,7 +29,7 @@ func CreatePayload(data *[]byte, from string) (Payload, error) {
 
 	// validate the payload and reject if not proper
 	payload := factory()
-	if unmarshalAndValidate(data, &payload) {
+	if !unmarshalAndValidate(data, &payload) {
 		return nil, &InvalidPayload{
 			reason: "Invalid payload received",
 		}
