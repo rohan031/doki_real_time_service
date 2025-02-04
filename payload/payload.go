@@ -70,4 +70,5 @@ func InitPayload() {
 	// user profile self action and user nodes action payload
 	payloadMap[userUpdateProfileType] = func() Payload { return &userUpdateProfile{} }
 	payloadMap[userCreateRootNodeType] = func() Payload { return &userCreateRootNode{} }
+	payloadMap[userNodeLikeActionType] = func() Payload { return &userNodeLikeAction{} }
 }
