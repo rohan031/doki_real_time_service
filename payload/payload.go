@@ -38,8 +38,10 @@ type basePayload struct {
 	From string      `json:"from" validate:"required"`
 }
 
+func (base *basePayload) SendPayload(*[]byte, hub, string) {}
+
 // unmarshalAndValidate first unmarshal payload json and validates it
-func unmarshalAndValidate[T any](payload *[]byte, target *T) bool {
+func unmarshalAndValidate(payload *[]byte, target Payload) bool {
 	if err := json.Unmarshal(*payload, target); err != nil {
 		log.Printf("error unmarshalling payload: %v\n", err)
 		return false
@@ -65,7 +67,7 @@ func InitPayload() {
 	payloadMap[userAcceptedFriendRequestType] = func() Payload { return &userAcceptFriendRequest{} }
 	payloadMap[userRemovesFriendRelationType] = func() Payload { return &userRemovesFriendRelation{} }
 
-	// user profile self action payload
+	// user profile self action and user nodes action payload
 	payloadMap[userUpdateProfileType] = func() Payload { return &userUpdateProfile{} }
 	payloadMap[userCreateRootNodeType] = func() Payload { return &userCreateRootNode{} }
 }
