@@ -56,9 +56,9 @@ type userNodeLikeAction struct {
 	Type         payloadType  `json:"type" validate:"required"`
 	From         string       `json:"from" validate:"required"`
 	To           string       `json:"to" validate:"required"`
-	IsLike       bool         `json:"isLike,string"`
-	LikeCount    int          `json:"likeCount,string"`
-	CommentCount int          `json:"commentCount,string"`
+	IsLike       bool         `json:"isLike"`
+	LikeCount    int          `json:"likeCount"`
+	CommentCount int          `json:"commentCount"`
 	NodeId       string       `json:"nodeId" validate:"required"`
 	NodeType     string       `json:"nodeType" validate:"required"`
 	Parents      []parentNode `json:"parents,string" validate:"required"`

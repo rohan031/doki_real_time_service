@@ -98,7 +98,7 @@ type deleteMessage struct {
 	From     string      `json:"from" validate:"required"`
 	To       string      `json:"to" validate:"required"`
 	Id       []string    `json:"id" validate:"required"`
-	Everyone bool        `json:"everyone,string"`
+	Everyone bool        `json:"everyone"`
 }
 
 func (message *deleteMessage) SendPayload(data *[]byte, h hub, senderResource string) {
