@@ -6,8 +6,9 @@ const (
 	// root nodes are nodes that are only dependent on only one node
 	// post, discussion they only depend on only user node
 	// but comment is dependent on 2 nodes, created by(user) and comment on(post or comment)
-	userCreateRootNodeType = payloadType("user_create_root_node")
-	userNodeLikeActionType = payloadType("user_node_like_action")
+	userCreateRootNodeType      = payloadType("user_create_root_node")
+	userNodeLikeActionType      = payloadType("user_node_like_action")
+	userCreateSecondaryNodeType = payloadType("user_create_secondary_node")
 )
 
 type userUpdateProfile struct {
@@ -82,6 +83,30 @@ func (payload *userNodeLikeAction) SendPayload(data *[]byte, h hub, senderResour
 			conn.WriteToChannel(data)
 		}
 	}
+}
 
-	//log.Println(payload.Parents)
+type userCreateSecondaryNode struct {
+	Type     payloadType  `json:"type" validate:"required"`
+	From     string       `json:"from" validate:"required"`
+	To       string       `json:"to" validate:"required"`
+	NodeId   string       `json:"nodeId" validate:"required"`
+	NodeType string       `json:"nodeType" validate:"required"`
+	Parents  []parentNode `json:"parents,string" validate:"required"`
+}
+
+func (payload *userCreateSecondaryNode) SendPayload(data *[]byte, h hub, senderResource string) {
+	nodeCreator := payload.From
+	parentNodeCreator := payload.To
+
+	if nodeCreator != parentNodeCreator {
+		parentNodeCreatorConnectedClients := h.GetAllConnectedClients(parentNodeCreator)
+		for _, conn := range parentNodeCreatorConnectedClients {
+			conn.WriteToChannel(data)
+		}
+	}
+
+	nodeCreatorConnectedClients := h.GetAllConnectedClients(nodeCreator)
+	for _, conn := range nodeCreatorConnectedClients {
+		conn.WriteToChannel(data)
+	}
 }
