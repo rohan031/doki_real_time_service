@@ -86,12 +86,14 @@ func (payload *userNodeLikeAction) SendPayload(data *[]byte, h hub, senderResour
 }
 
 type userCreateSecondaryNode struct {
-	Type     payloadType  `json:"type" validate:"required"`
-	From     string       `json:"from" validate:"required"`
-	To       string       `json:"to" validate:"required"`
-	NodeId   string       `json:"nodeId" validate:"required"`
-	NodeType string       `json:"nodeType" validate:"required"`
-	Parents  []parentNode `json:"parents,string" validate:"required"`
+	Type                 payloadType  `json:"type" validate:"required"`
+	From                 string       `json:"from" validate:"required"`
+	To                   string       `json:"to" validate:"required"`
+	NodeId               string       `json:"nodeId" validate:"required"`
+	NodeType             string       `json:"nodeType" validate:"required"`
+	Mentions             []string     `json:"mentions"`
+	ReplyOnNodeCreatedBy string       `json:"replyOnNodeCreatedBy"`
+	Parents              []parentNode `json:"parents,string" validate:"required"`
 }
 
 func (payload *userCreateSecondaryNode) SendPayload(data *[]byte, h hub, senderResource string) {
@@ -108,5 +110,23 @@ func (payload *userCreateSecondaryNode) SendPayload(data *[]byte, h hub, senderR
 	nodeCreatorConnectedClients := h.GetAllConnectedClients(nodeCreator)
 	for _, conn := range nodeCreatorConnectedClients {
 		conn.WriteToChannel(data)
+	}
+
+	for _, userMentioned := range payload.Mentions {
+		if userMentioned == nodeCreator || userMentioned == parentNodeCreator {
+			continue
+		}
+
+		userMentionedAllConnectedClients := h.GetAllConnectedClients(userMentioned)
+		for _, conn := range userMentionedAllConnectedClients {
+			conn.WriteToChannel(data)
+		}
+	}
+
+	if payload.ReplyOnNodeCreatedBy != nodeCreator && payload.ReplyOnNodeCreatedBy != parentNodeCreator {
+		replyOnNodeCreatedByConnectedClients := h.GetAllConnectedClients(payload.ReplyOnNodeCreatedBy)
+		for _, conn := range replyOnNodeCreatedByConnectedClients {
+			conn.WriteToChannel(data)
+		}
 	}
 }
