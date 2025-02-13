@@ -37,3 +37,16 @@ func CreatePayload(data *[]byte, from string) (Payload, error) {
 
 	return payload, nil
 }
+
+// CreatePresencePayload creates a new presence payload to send to the client
+// presenceFor -> user whose presence we will share
+// presenceTo -> user who will the presence of [presenceFor]
+func CreatePresencePayload(presenceFor, presenceTo string, online bool) Payload {
+	return &userPresencePayload{
+		Type:   userPresenceInfoType,
+		To:     presenceTo,
+		User:   presenceFor,
+		Online: online,
+	}
+
+}

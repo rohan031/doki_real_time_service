@@ -30,6 +30,11 @@ type resourceList map[string]client.Client
 // at a time same user with multiple device can connect
 type clientList map[string]resourceList
 
+// presenceSubscription contains complete user to send the user status
+// username -> complete user
+// [complete user] has subscribed to username
+type presenceSubscription map[string][]string
+
 type clientImpl struct {
 	connection *websocket.Conn
 	hub        *Hub

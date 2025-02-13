@@ -22,6 +22,10 @@ type hub interface {
 	GetAllConnectedClients(string) map[string]client.Client
 
 	GetIndividualClient(string) client.Client
+
+	SubscribeUserPresence(string, string)
+
+	UnsubscribeUserPresence(string, string)
 }
 
 type InvalidPayload struct {
@@ -72,4 +76,7 @@ func InitPayload() {
 	payloadMap[userCreateRootNodeType] = func() Payload { return &userCreateRootNode{} }
 	payloadMap[userNodeLikeActionType] = func() Payload { return &userNodeLikeAction{} }
 	payloadMap[userCreateSecondaryNodeType] = func() Payload { return &userCreateSecondaryNode{} }
+
+	// user presence subscription payload
+	payloadMap[userPresenceSubscriptionType] = func() Payload { return &userPresenceSubscription{} }
 }
