@@ -20,6 +20,7 @@ type chatMessage struct {
 	Id      string      `json:"id" validate:"required"`
 	Subject string      `json:"subject" validate:"required"`
 	Body    string      `json:"body" validate:"required"`
+	ReplyOn string      `json:"replyOn"`
 	SendAt  time.Time   `json:"sendAt" validate:"required"`
 }
 
