@@ -8,8 +8,8 @@ import (
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/gorilla/websocket"
 	"log"
+	"maps"
 	"net/http"
-	"slices"
 	"sync"
 )
 
@@ -38,8 +38,8 @@ func (h *Hub) addClient(user string, client client.Client) {
 
 	if h.clients[username] == nil {
 		h.clients[username] = make(resourceList)
-
 	}
+
 	h.clients[username][resource] = client
 }
 
@@ -108,7 +108,7 @@ func (h *Hub) sendPresence(online bool, username string) {
 		return
 	}
 
-	for _, completeUser := range usersSubscribed {
+	for completeUser := range maps.Keys(usersSubscribed) {
 		conn := h.GetIndividualClient(completeUser)
 		if conn == nil {
 			h.UnsubscribeUserPresence(username, completeUser)
@@ -150,8 +150,13 @@ func (h *Hub) sendInitialPresence(userPresence string, completeUser string) {
 func (h *Hub) SubscribeUserPresence(userToSubscribe string, completeUser string) {
 	h.Lock()
 	defer h.Unlock()
+
 	log.Printf("\nSubscribing to user presence: %v, %v\n", userToSubscribe, completeUser)
-	h.presenceSubscription[userToSubscribe] = append(h.presenceSubscription[userToSubscribe], completeUser)
+	if h.presenceSubscription[userToSubscribe] == nil {
+		h.presenceSubscription[userToSubscribe] = make(presenceList)
+	}
+
+	h.presenceSubscription[userToSubscribe][completeUser] = true
 	h.sendInitialPresence(userToSubscribe, completeUser)
 }
 
@@ -167,9 +172,7 @@ func (h *Hub) UnsubscribeUserPresence(userToUnsubscribe string, completeUser str
 		return
 	}
 
-	h.presenceSubscription[userToUnsubscribe] = slices.DeleteFunc(h.presenceSubscription[userToUnsubscribe], func(user string) bool {
-		return completeUser == user
-	})
+	delete(h.presenceSubscription[userToUnsubscribe], completeUser)
 
 	if len(h.presenceSubscription[userToUnsubscribe]) < 0 {
 		delete(h.presenceSubscription, userToUnsubscribe)
