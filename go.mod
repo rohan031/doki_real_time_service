@@ -1,8 +1,6 @@
 module doki.co.in/doki_real_time_service
 
-go 1.22.6
-
-toolchain go1.22.11
+go 1.24.0
 
 require (
 	github.com/MicahParks/keyfunc/v3 v3.3.10
