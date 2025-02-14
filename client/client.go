@@ -7,4 +7,6 @@ type Client interface {
 	GetConnection() *websocket.Conn
 	GetUserInfo() (string, string)
 	WriteToChannel(*[]byte)
+	GetMySubscriptions() map[string]bool
+	AddSubscription(string)
 }

@@ -56,6 +56,7 @@ func (h *Hub) sendInitialPresence(userPresence string, completeUser string) {
 		return
 	}
 
+	conn.AddSubscription(userPresence)
 	log.Printf("\nSending initial presence: %v, %v\n", userPresence, completeUser)
 	username, resource := utils.GetUsernameAndResourceFromUser(completeUser)
 	presencePayload := payload.CreatePresencePayload(userPresence, username, ok)
@@ -82,7 +83,6 @@ func (h *Hub) SubscribeUserPresence(userToSubscribe string, completeUser string)
 
 // UnsubscribeUserPresence unsubscribes the given complete user to the user presence updates
 func (h *Hub) UnsubscribeUserPresence(userToUnsubscribe string, completeUser string) {
-
 	h.presenceSubscription.Lock()
 	defer h.presenceSubscription.Unlock()
 

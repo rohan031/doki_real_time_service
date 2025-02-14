@@ -41,7 +41,16 @@ type clientImpl struct {
 	user string
 
 	// channel buffering to prevent writing to connection concurrently
-	write chan []byte
+	write           chan []byte
+	mySubscriptions map[string]bool
+}
+
+func (c *clientImpl) AddSubscription(user string) {
+	c.mySubscriptions[user] = true
+}
+
+func (c *clientImpl) GetMySubscriptions() map[string]bool {
+	return c.mySubscriptions
 }
 
 func (c *clientImpl) GetConnection() *websocket.Conn {
@@ -134,9 +143,10 @@ func (c *clientImpl) writeMessage() {
 
 func createClient(conn *websocket.Conn, hub *Hub, user string) rawClient {
 	return &clientImpl{
-		connection: conn,
-		hub:        hub,
-		write:      make(chan []byte),
-		user:       user,
+		connection:      conn,
+		hub:             hub,
+		write:           make(chan []byte),
+		user:            user,
+		mySubscriptions: make(map[string]bool),
 	}
 }

@@ -47,6 +47,7 @@ func (h *Hub) removeClient(c client.Client) {
 	defer h.Unlock()
 
 	username, resource := c.GetUserInfo()
+	completeUser := utils.CreateUserFromUsernameAndResource(username, resource)
 	if username == "" || resource == "" {
 		return
 	}
@@ -59,6 +60,10 @@ func (h *Hub) removeClient(c client.Client) {
 			_ = conn.GetConnection().Close()
 		}
 
+		mySubscriptions := conn.GetMySubscriptions()
+		for sub := range mySubscriptions {
+			h.UnsubscribeUserPresence(sub, completeUser)
+		}
 		// remove resource from username
 		delete(h.clients[username], resource)
 
