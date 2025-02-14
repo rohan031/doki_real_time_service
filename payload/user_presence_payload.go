@@ -1,6 +1,8 @@
 package payload
 
-import "doki.co.in/doki_real_time_service/utils"
+import (
+	"doki.co.in/doki_real_time_service/utils"
+)
 
 const (
 	userPresenceSubscriptionType = payloadType("user_presence_subscription")
@@ -25,14 +27,14 @@ func (payload *userPresenceSubscription) SendPayload(data *[]byte, h hub, sender
 }
 
 // only server sends this
-type userPresencePayload struct {
+type userPresenceInfoPayload struct {
 	Type   payloadType `json:"type"`
 	To     string      `json:"to"`
 	User   string      `json:"user"`
 	Online bool        `json:"online"`
 }
 
-func (payload *userPresencePayload) SendPayload(data *[]byte, h hub, userResource string) {
+func (payload *userPresenceInfoPayload) SendPayload(data *[]byte, h hub, userResource string) {
 	completeUser := utils.CreateUserFromUsernameAndResource(payload.To, userResource)
 
 	conn := h.GetIndividualClient(completeUser)

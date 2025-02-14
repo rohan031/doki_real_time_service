@@ -22,7 +22,6 @@ type rawClient interface {
 }
 
 type resourceList map[string]client.Client
-type presenceList map[string]bool
 
 // clientList contains all the connection that are currently
 // connected to the server.
@@ -30,11 +29,6 @@ type presenceList map[string]bool
 // each user has its own map of connected Clients
 // at a time same user with multiple device can connect
 type clientList map[string]resourceList
-
-// presenceSubscription contains complete user to send the user status
-// username -> complete user
-// [complete user] has subscribed to username
-type presenceSubscription map[string]presenceList
 
 type clientImpl struct {
 	connection *websocket.Conn
@@ -89,6 +83,7 @@ func (c *clientImpl) readMessage() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error reading message: %v\n", err)
 			}
+			log.Printf("error reading message: %v\n", err)
 			return
 		}
 

@@ -2,13 +2,11 @@ package hub
 
 import (
 	"doki.co.in/doki_real_time_service/client"
-	"doki.co.in/doki_real_time_service/payload"
 	"doki.co.in/doki_real_time_service/utils"
 	"errors"
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/gorilla/websocket"
 	"log"
-	"maps"
 	"net/http"
 	"sync"
 )
@@ -23,7 +21,7 @@ type Hub struct {
 	sync.RWMutex
 	clients              clientList
 	jwks                 *keyfunc.Keyfunc
-	presenceSubscription presenceSubscription
+	presenceSubscription userPresence
 }
 
 // addClient adds newly connected client to Hub
@@ -55,7 +53,7 @@ func (h *Hub) removeClient(c client.Client) {
 
 	// check the connection we are tyring to remove and the connection that is present are same
 	// this can happen if client resource is same but underlying tcp connection is changed
-	if conn, ok := h.clients[username][resource]; ok && c.GetConnection() == conn.GetConnection() {
+	if conn, ok := h.clients[username][resource]; ok && conn.GetConnection() == c.GetConnection() {
 		// close the websocket connection
 		if conn.GetConnection() != nil {
 			_ = conn.GetConnection().Close()
@@ -76,7 +74,6 @@ func (h *Hub) removeClient(c client.Client) {
 // GetIndividualClient is used to get user connected client in particular resource
 // this will be used when server needs to send updates for the post and other user subscriptions
 func (h *Hub) GetIndividualClient(user string) client.Client {
-
 	username, resource := utils.GetUsernameAndResourceFromUser(user)
 	if username == "" || resource == "" {
 		return nil
@@ -98,85 +95,6 @@ func (h *Hub) GetIndividualClient(user string) client.Client {
 // this will be used when forwarding user messages
 func (h *Hub) GetAllConnectedClients(username string) map[string]client.Client {
 	return h.clients[username]
-}
-
-// sendPresence sends user presence updates to all the subscribed users
-func (h *Hub) sendPresence(online bool, username string) {
-	// find user in subscription and send status change
-	usersSubscribed, ok := h.presenceSubscription[username]
-	if !ok {
-		return
-	}
-
-	for completeUser := range maps.Keys(usersSubscribed) {
-		conn := h.GetIndividualClient(completeUser)
-		if conn == nil {
-			h.UnsubscribeUserPresence(username, completeUser)
-			continue
-		}
-
-		user, resource := utils.GetUsernameAndResourceFromUser(completeUser)
-		presencePayload := payload.CreatePresencePayload(username, user, online)
-
-		log.Printf("\nSending user presence: %v, %v\n", username, completeUser)
-		data := utils.PayloadToJson(presencePayload)
-		if data != nil {
-			presencePayload.SendPayload(data, h, resource)
-		}
-	}
-}
-
-// sendInitialPresence sends the given user presence on initial subscription
-func (h *Hub) sendInitialPresence(userPresence string, completeUser string) {
-	_, ok := h.clients[userPresence]
-	conn := h.GetIndividualClient(completeUser)
-
-	if conn == nil {
-		h.UnsubscribeUserPresence(userPresence, completeUser)
-		return
-	}
-
-	log.Printf("\nSending initial presence: %v, %v\n", userPresence, completeUser)
-	username, resource := utils.GetUsernameAndResourceFromUser(completeUser)
-	presencePayload := payload.CreatePresencePayload(userPresence, username, ok)
-
-	data := utils.PayloadToJson(presencePayload)
-	if data != nil {
-		presencePayload.SendPayload(data, h, resource)
-	}
-}
-
-// SubscribeUserPresence subscribes the given complete user to the user presence updates
-func (h *Hub) SubscribeUserPresence(userToSubscribe string, completeUser string) {
-	h.Lock()
-	defer h.Unlock()
-
-	log.Printf("\nSubscribing to user presence: %v, %v\n", userToSubscribe, completeUser)
-	if h.presenceSubscription[userToSubscribe] == nil {
-		h.presenceSubscription[userToSubscribe] = make(presenceList)
-	}
-
-	h.presenceSubscription[userToSubscribe][completeUser] = true
-	h.sendInitialPresence(userToSubscribe, completeUser)
-}
-
-// UnsubscribeUserPresence unsubscribes the given complete user to the user presence updates
-func (h *Hub) UnsubscribeUserPresence(userToUnsubscribe string, completeUser string) {
-	h.Lock()
-	defer h.Unlock()
-
-	log.Printf("\nUn-Subscribing to user presence: %v, %v\n", userToUnsubscribe, completeUser)
-	// find slice
-	_, ok := h.presenceSubscription[userToUnsubscribe]
-	if !ok {
-		return
-	}
-
-	delete(h.presenceSubscription[userToUnsubscribe], completeUser)
-
-	if len(h.presenceSubscription[userToUnsubscribe]) < 0 {
-		delete(h.presenceSubscription, userToUnsubscribe)
-	}
 }
 
 // ServeWS methods takes the current [http] request
@@ -220,8 +138,10 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 // CreateHub creates a new hub
 func CreateHub(jwks *keyfunc.Keyfunc) *Hub {
 	return &Hub{
-		clients:              make(clientList),
-		jwks:                 jwks,
-		presenceSubscription: make(presenceSubscription),
+		clients: make(clientList),
+		jwks:    jwks,
+		presenceSubscription: userPresence{
+			subscriptions: make(presenceSubscription),
+		},
 	}
 }

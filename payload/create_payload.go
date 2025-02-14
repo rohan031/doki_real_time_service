@@ -42,7 +42,7 @@ func CreatePayload(data *[]byte, from string) (Payload, error) {
 // presenceFor -> user whose presence we will share
 // presenceTo -> user who will the presence of [presenceFor]
 func CreatePresencePayload(presenceFor, presenceTo string, online bool) Payload {
-	return &userPresencePayload{
+	return &userPresenceInfoPayload{
 		Type:   userPresenceInfoType,
 		To:     presenceTo,
 		User:   presenceFor,
