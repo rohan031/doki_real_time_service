@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/gorilla/websocket"
+	"log"
 	"net/http"
 	"sync"
 )
@@ -113,10 +114,10 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// log.Println("new connection for websocket")
+	log.Println("new connection for websocket")
 	conn, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
-		// log.Printf("error upgrading incoming http connection to websocket: %v\n", err)
+		log.Printf("error upgrading incoming http connection to websocket: %v\n", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -126,7 +127,7 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 		resource = utils.RandomString()
 	}
 
-	// log.Printf("new connection: %v@%v\n\n", username, resource)
+	log.Printf("new connection: %v@%v\n\n", username, resource)
 
 	user := utils.CreateUserFromUsernameAndResource(username, resource)
 	newClient := createClient(conn, h, user)
