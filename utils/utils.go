@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -42,7 +41,7 @@ func PayloadToJson(payload any) *[]byte {
 	jsonBytes, err := json.Marshal(payload)
 
 	if err != nil {
-		log.Printf("error encoding to json: %v\n", err)
+		// log.Printf("error encoding to json: %v\n", err)
 		return nil
 	}
 
