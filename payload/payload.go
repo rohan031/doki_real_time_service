@@ -4,7 +4,6 @@ import (
 	"doki.co.in/doki_real_time_service/client"
 	"encoding/json"
 	"github.com/go-playground/validator/v10"
-	"log"
 )
 
 var validate = validator.New()
@@ -47,12 +46,12 @@ func (base *basePayload) SendPayload(*[]byte, hub, string) {}
 // unmarshalAndValidate first unmarshal payload json and validates it
 func unmarshalAndValidate(payload *[]byte, target Payload) bool {
 	if err := json.Unmarshal(*payload, target); err != nil {
-		log.Printf("error unmarshalling payload: %v\n", err)
+		//log.Printf("error unmarshalling payload: %v\n", err)
 		return false
 	}
 
 	if err := validate.Struct(target); err != nil {
-		log.Println("missing required field in payload.")
+		//log.Println("missing required field in payload.")
 		return false
 	}
 

@@ -3,7 +3,6 @@ package hub
 import (
 	"doki.co.in/doki_real_time_service/payload"
 	"doki.co.in/doki_real_time_service/utils"
-	"log"
 	"maps"
 	"sync"
 )
@@ -38,7 +37,7 @@ func (h *Hub) sendPresence(online bool, username string) {
 		user, resource := utils.GetUsernameAndResourceFromUser(completeUser)
 		presencePayload := payload.CreatePresencePayload(username, user, online)
 
-		log.Printf("\nSending user presence: %v, %v\n", username, completeUser)
+		//log.Printf("\nSending user presence: %v, %v\n", username, completeUser)
 		data := utils.PayloadToJson(presencePayload)
 		if data != nil {
 			presencePayload.SendPayload(data, h, resource)
@@ -57,7 +56,7 @@ func (h *Hub) sendInitialPresence(userPresence string, completeUser string) {
 	}
 
 	conn.AddSubscription(userPresence)
-	log.Printf("\nSending initial presence: %v, %v\n", userPresence, completeUser)
+	//log.Printf("\nSending initial presence: %v, %v\n", userPresence, completeUser)
 	username, resource := utils.GetUsernameAndResourceFromUser(completeUser)
 	presencePayload := payload.CreatePresencePayload(userPresence, username, ok)
 
@@ -72,7 +71,7 @@ func (h *Hub) SubscribeUserPresence(userToSubscribe string, completeUser string)
 	h.presenceSubscription.Lock()
 	defer h.presenceSubscription.Unlock()
 
-	log.Printf("\nSubscribing to user presence: %v, %v\n", userToSubscribe, completeUser)
+	//log.Printf("\nSubscribing to user presence: %v, %v\n", userToSubscribe, completeUser)
 	if h.presenceSubscription.subscriptions[userToSubscribe] == nil {
 		h.presenceSubscription.subscriptions[userToSubscribe] = make(presenceList)
 	}
@@ -86,7 +85,7 @@ func (h *Hub) UnsubscribeUserPresence(userToUnsubscribe string, completeUser str
 	h.presenceSubscription.Lock()
 	defer h.presenceSubscription.Unlock()
 
-	log.Printf("\nUn-Subscribing to user presence: %v, %v\n", userToUnsubscribe, completeUser)
+	//log.Printf("\nUn-Subscribing to user presence: %v, %v\n", userToUnsubscribe, completeUser)
 	// find slice
 	_, ok := h.presenceSubscription.subscriptions[userToUnsubscribe]
 	if !ok {
