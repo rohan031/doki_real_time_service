@@ -12,6 +12,7 @@ const (
 	pongWait             = 30 * time.Second
 	pingInterval         = (pongWait * 9) / 10
 	incomingPayloadLimit = int64(16384)
+	writeWait            = 10 * time.Second
 )
 
 type rawClient interface {
@@ -111,12 +112,15 @@ func (c *clientImpl) writeMessage() {
 	ticker := time.NewTicker(pingInterval)
 	defer func() {
 		ticker.Stop()
-		c.hub.removeClient(c)
+		//c.hub.removeClient(c)
+		_ = c.GetConnection().Close()
+
 	}()
 
 	for {
 		select {
 		case message, ok := <-c.write:
+			_ = c.connection.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				if err := c.connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
 					//log.Printf("error closing connection: %v\n", err)
@@ -131,6 +135,7 @@ func (c *clientImpl) writeMessage() {
 			}
 
 		case <-ticker.C:
+			_ = c.connection.SetWriteDeadline(time.Now().Add(writeWait))
 			//log.Printf("sending ping to Client: %v\n", c.user)
 			if err := c.connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				//log.Printf("error sending ping to Client: %v\n", err)
