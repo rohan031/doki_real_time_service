@@ -96,7 +96,7 @@ type userCreateSecondaryNode struct {
 	Parents              []parentNode `json:"parents,string" validate:"required"`
 }
 
-func (payload *userCreateSecondaryNode) SendPayload(data *[]byte, h hub, _ string) {
+func (payload *userCreateSecondaryNode) SendPayload(data *[]byte, h hub, senderResource string) {
 	nodeCreator := payload.From
 	parentNodeCreator := payload.To
 

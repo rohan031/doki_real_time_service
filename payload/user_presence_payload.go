@@ -16,7 +16,7 @@ type userPresenceSubscription struct {
 	Subscribe bool        `json:"subscribe"`
 }
 
-func (payload *userPresenceSubscription) SendPayload(_ *[]byte, h hub, senderResource string) {
+func (payload *userPresenceSubscription) SendPayload(data *[]byte, h hub, senderResource string) {
 	completeUser := utils.CreateUserFromUsernameAndResource(payload.From, senderResource)
 
 	if payload.Subscribe {

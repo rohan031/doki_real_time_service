@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/joho/godotenv"
+	"log"
 	"net/http"
 	"os"
 )
@@ -13,7 +14,7 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		// log.Printf("error loading env file: %v\n", err)
+		log.Printf("error loading env file: %v\n", err)
 	}
 
 	port := os.Getenv("PORT")
@@ -26,7 +27,7 @@ func main() {
 
 	jwks, err := keyfunc.NewDefault([]string{jwksURL})
 	if err != nil {
-		// log.Fatalf("Failed to create JWK Set from resource at the given URL.\nError: %s", err)
+		log.Fatalf("Failed to create JWK Set from resource at the given URL.\nError: %s", err)
 	}
 
 	fmt.Println("Doki real time service")
@@ -34,5 +35,5 @@ func main() {
 	payload.InitPayload()
 	newHub := hub.CreateHub(&jwks)
 	http.HandleFunc("/ws", newHub.ServeWS)
-	// log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
