@@ -5,7 +5,6 @@ import (
 	"doki.co.in/doki_real_time_service/payload"
 	"doki.co.in/doki_real_time_service/utils"
 	"github.com/gorilla/websocket"
-	"log"
 	"time"
 )
 
@@ -78,11 +77,11 @@ func (c *clientImpl) readMessage() {
 
 	// set pong wait
 	if err := c.connection.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
-		log.Printf("error setting pongwait: %v\n", err)
+		// log.Printf("error setting pongwait: %v\n", err)
 		return
 	}
 	c.connection.SetPongHandler(func(string) error {
-		log.Printf("received pong from Client: %v\n", c.user)
+		// log.Printf("received pong from Client: %v\n", c.user)
 		return c.connection.SetReadDeadline(time.Now().Add(pongWait))
 	})
 
@@ -90,15 +89,15 @@ func (c *clientImpl) readMessage() {
 		_, data, err := c.connection.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error reading message: %v\n", err)
+				// log.Printf("error reading message: %v\n", err)
 			}
-			log.Printf("error reading message: %v\n", err)
+			// log.Printf("error reading message: %v\n", err)
 			return
 		}
 
 		incomingPayload, err := payload.CreatePayload(&data, username)
 		if err != nil {
-			log.Println(err.Error())
+			// log.Println(err.Error())
 			continue
 		}
 
@@ -120,21 +119,21 @@ func (c *clientImpl) writeMessage() {
 		case message, ok := <-c.write:
 			if !ok {
 				if err := c.connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
-					log.Printf("error closing connection: %v\n", err)
+					// log.Printf("error closing connection: %v\n", err)
 				}
 				return
 			}
 
 			if err := c.connection.WriteMessage(websocket.TextMessage, message); err != nil {
-				log.Printf("error sending message: %v\n", err)
+				// log.Printf("error sending message: %v\n", err)
 			} else {
-				log.Printf("message send to Client: %v\n\n", c.user)
+				// log.Printf("message send to Client: %v\n\n", c.user)
 			}
 
 		case <-ticker.C:
-			log.Printf("sending ping to Client: %v\n", c.user)
+			// log.Printf("sending ping to Client: %v\n", c.user)
 			if err := c.connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-				log.Printf("error sending ping to Client: %v\n", err)
+				// log.Printf("error sending ping to Client: %v\n", err)
 				return
 			}
 		}
