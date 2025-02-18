@@ -11,7 +11,7 @@ import (
 const (
 	pongWait             = 30 * time.Second
 	pingInterval         = (pongWait * 9) / 10
-	incomingPayloadLimit = int64(16384)
+	incomingPayloadLimit = int64(1<<14 + 1024)
 	writeWait            = 10 * time.Second
 )
 
