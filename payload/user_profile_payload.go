@@ -118,8 +118,10 @@ func (payload *userCreateSecondaryNode) SendPayload(data *[]byte, h hub, senderR
 	}
 
 	nodeCreatorConnectedClients := h.GetAllConnectedClients(nodeCreator)
-	for _, conn := range nodeCreatorConnectedClients {
-		conn.WriteToChannel(data)
+	for res, conn := range nodeCreatorConnectedClients {
+		if res != senderResource {
+			conn.WriteToChannel(data)
+		}
 	}
 
 	for _, userMentioned := range payload.Mentions {
