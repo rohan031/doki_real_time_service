@@ -31,10 +31,11 @@ func (payload *userUpdateProfile) SendPayload(data *[]byte, h hub, senderResourc
 }
 
 type userCreateRootNode struct {
-	Type     payloadType `json:"type" validate:"required"`
-	From     string      `json:"from" validate:"required"`
-	Id       string      `json:"id" validate:"required"`
-	NodeType string      `json:"nodeType" validate:"required"`
+	Type        payloadType `json:"type" validate:"required"`
+	From        string      `json:"from" validate:"required"`
+	Id          string      `json:"id" validate:"required"`
+	NodeType    string      `json:"nodeType" validate:"required"`
+	UsersTagged []string    `json:"usersTagged"`
 }
 
 func (payload *userCreateRootNode) SendPayload(data *[]byte, h hub, senderResource string) {
@@ -44,6 +45,15 @@ func (payload *userCreateRootNode) SendPayload(data *[]byte, h hub, senderResour
 	for res, conn := range userConnectedClients {
 		if res != senderResource {
 			conn.WriteToChannel(data)
+		}
+	}
+
+	for _, user := range payload.UsersTagged {
+		userConnectedClients := h.GetAllConnectedClients(user)
+		for res, conn := range userConnectedClients {
+			if res != senderResource {
+				conn.WriteToChannel(data)
+			}
 		}
 	}
 }
