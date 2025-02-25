@@ -36,8 +36,8 @@ func (payload *pollsVotesUpdate) SendPayload(data *[]byte, h hub, senderResource
 			continue
 		}
 
-		_, res := conn.GetUserInfo()
-		if res != senderResource {
+		user, res := conn.GetUserInfo()
+		if user != payload.From || res != senderResource {
 			// send votes update to user
 			conn.WriteToChannel(data)
 		}
