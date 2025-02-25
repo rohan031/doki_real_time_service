@@ -25,6 +25,8 @@ type hub interface {
 	Subscribe(string, string, bool)
 
 	Unsubscribe(string, string)
+
+	GetSubscribers(string) map[string]bool
 }
 
 type InvalidPayload struct {
@@ -78,4 +80,8 @@ func InitPayload() {
 
 	// user presence subscription payload
 	payloadMap[userPresenceSubscriptionType] = func() Payload { return &userPresenceSubscription{} }
+
+	// poll actions payload
+	payloadMap[pollsSubscriptionType] = func() Payload { return &pollsSubscription{} }
+	payloadMap[pollsVotesUpdateType] = func() Payload { return &pollsVotesUpdate{} }
 }

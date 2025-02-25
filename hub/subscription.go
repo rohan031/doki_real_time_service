@@ -53,3 +53,7 @@ func (h *Hub) Unsubscribe(nodeIdentifier, subscriber string) {
 		delete(h.subscription.subscriptions, nodeIdentifier)
 	}
 }
+
+func (h *Hub) GetSubscribers(nodeIdentifier string) map[string]bool {
+	return h.subscription.subscriptions[nodeIdentifier]
+}
