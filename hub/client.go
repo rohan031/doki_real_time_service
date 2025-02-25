@@ -45,6 +45,8 @@ type clientImpl struct {
 	mySubscriptions map[string]bool
 }
 
+// AddSubscription add node to users subscription list
+// used to clean up at the end when user disconnect
 func (c *clientImpl) AddSubscription(user string) {
 	c.mySubscriptions[user] = true
 }
@@ -78,7 +80,7 @@ func (c *clientImpl) readMessage() {
 
 	// set pong wait
 	if err := c.connection.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
-		//log.Printf("error setting pongwait: %v\n", err)
+		//log.Printf("error setting pongWait: %v\n", err)
 		return
 	}
 	c.connection.SetPongHandler(func(string) error {

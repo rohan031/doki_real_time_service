@@ -22,9 +22,9 @@ type hub interface {
 
 	GetIndividualClient(string) client.Client
 
-	SubscribeUserPresence(string, string)
+	Subscribe(string, string, bool)
 
-	UnsubscribeUserPresence(string, string)
+	Unsubscribe(string, string)
 }
 
 type InvalidPayload struct {

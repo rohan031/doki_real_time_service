@@ -18,9 +18,9 @@ var websocketUpgrader = websocket.Upgrader{
 // Hub handles all the client connection and related methods
 type Hub struct {
 	sync.RWMutex
-	clients              clientList
-	jwks                 *keyfunc.Keyfunc
-	presenceSubscription userPresence
+	clients      clientList
+	jwks         *keyfunc.Keyfunc
+	subscription subscription
 }
 
 // addClient adds newly connected client to Hub
@@ -60,8 +60,8 @@ func (h *Hub) removeClient(c client.Client) {
 		}
 
 		mySubscriptions := conn.GetMySubscriptions()
-		for sub := range mySubscriptions {
-			h.UnsubscribeUserPresence(sub, completeUser)
+		for subscription := range mySubscriptions {
+			h.Unsubscribe(subscription, completeUser)
 		}
 		// remove resource from username
 		delete(h.clients[username], resource)
@@ -113,10 +113,8 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//log.Println("new connection for websocket")
 	conn, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
-		//log.Printf("error upgrading incoming http connection to websocket: %v\n", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -126,12 +124,12 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 		resource = utils.RandomString()
 	}
 
-	//log.Printf("new connection: %v@%v\n\n", username, resource)
-
 	user := utils.CreateUserFromUsernameAndResource(username, resource)
 	newClient := createClient(conn, h, user)
 
 	h.addClient(user, newClient)
+
+	// sending my initial online presence
 	h.sendPresence(true, username)
 
 	go newClient.readMessage()
@@ -144,8 +142,8 @@ func CreateHub(jwks *keyfunc.Keyfunc) *Hub {
 	return &Hub{
 		clients: make(clientList),
 		jwks:    jwks,
-		presenceSubscription: userPresence{
-			subscriptions: make(presenceSubscription),
+		subscription: subscription{
+			subscriptions: make(nodeSubscription),
 		},
 	}
 }
