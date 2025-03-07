@@ -8,15 +8,20 @@ const (
 )
 
 type pollsSubscription struct {
-	Type   payloadType `json:"type" validate:"required"`
-	From   string      `json:"from" validate:"required"`
-	PollId string      `json:"pollId" validate:"required"`
+	Type      payloadType `json:"type" validate:"required"`
+	From      string      `json:"from" validate:"required"`
+	PollId    string      `json:"pollId" validate:"required"`
+	Subscribe bool        `json:"subscribe"`
 }
 
 func (payload *pollsSubscription) SendPayload(_ *[]byte, h hub, senderResource string) {
 	completeUser := utils.CreateUserFromUsernameAndResource(payload.From, senderResource)
 
-	h.Subscribe(payload.PollId, completeUser, false)
+	if payload.Subscribe {
+		h.Subscribe(payload.PollId, completeUser, false)
+	} else {
+		h.Unsubscribe(payload.PollId, completeUser)
+	}
 }
 
 type pollsVotesUpdate struct {
